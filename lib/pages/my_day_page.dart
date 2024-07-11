@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:waterbottle/data/display_data.dart';
+
 
 class MyDayPage extends StatefulWidget {
   const MyDayPage({Key? key}) : super(key: key);
@@ -41,7 +43,7 @@ class _MyDayPageState extends State<MyDayPage> {
                             width: 250,
                             height: 250,
                             child: TweenAnimationBuilder<double>(
-                              tween: Tween<double>(begin: 0.0, end: .844),
+                              tween: Tween<double>(begin: 0.0, end: DisplayData.displayData()["consumedToday"] / DisplayData.displayData()["consumeGoal"]),
                               duration: const Duration(milliseconds: 3500),
                               curve: Curves.bounceInOut,
                               builder: (context, value, _) =>
@@ -52,34 +54,34 @@ class _MyDayPageState extends State<MyDayPage> {
                               ),
                             ),
                           ),
-                          const Row(
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Column(
                                 children: [
                                   Text(
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 40,
                                     ),
-                                    '38',
+                                    DisplayData.displayData()["consumedToday"].toString(),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     width: 40,
                                     child: Divider(
                                         thickness: 1, color: Colors.white),
                                   ),
                                   Text(
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 40,
                                     ),
-                                    '45',
+                                    DisplayData.displayData()["consumeGoal"].toString(),
                                   ),
                                 ],
                               ),
-                              SizedBox(width: 10),
-                              Column(
+                              const SizedBox(width: 10),
+                              const Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text('oz\nconsumed'),
@@ -102,8 +104,8 @@ class _MyDayPageState extends State<MyDayPage> {
                                 });
                               },
                               child: const Icon(
-                                Icons.tungsten,
-                                size: 15,
+                                Icons.water_drop,
+                                size: 20,
                               ),
                             ),
                           ),
@@ -119,7 +121,7 @@ class _MyDayPageState extends State<MyDayPage> {
                               },
                               child: const Icon(
                                 Icons.add,
-                                size: 15,
+                                size: 20,
                               ),
                             ),
                           ),
@@ -147,11 +149,11 @@ class _MyDayPageState extends State<MyDayPage> {
                   ),
                 ),
                 const SizedBox(height: 5),
-                const Text(
-                  style: TextStyle(
+                Text(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
-                  '6 oz left in bottle',
+                  '${DisplayData.displayData()["waterInBottle"]} oz left in bottle',
                 ),
               ],
             ),
@@ -164,41 +166,13 @@ class _MyDayPageState extends State<MyDayPage> {
             const Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Column(
-                  children: [
-                    Text(
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 30,
-                        ),
-                        '82°F'),
-                    Text('Temperature'),
-                  ],
-                ),
-                VerticalDivider(),
-                Column(
-                  children: [
-                    Text(
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 30,
-                        ),
-                        '99%'),
-                    Text('Humidity'),
-                  ],
-                ),
-                VerticalDivider(),
-                Column(
-                  children: [
-                    Text(
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 30,
-                        ),
-                        '2 oz'),
-                    Text('more water needed'),
-                  ],
-                ),
+                DoTWCircularProgressIndicator(text: 'S', endTween: 0.1),
+                DoTWCircularProgressIndicator(text: 'M', endTween: 1.1),
+                DoTWCircularProgressIndicator(text: 'T', endTween: 0.4),
+                DoTWCircularProgressIndicator(text: 'W', endTween: 0.2),
+                DoTWCircularProgressIndicator(text: 'T', endTween: 0.8),
+                DoTWCircularProgressIndicator(text: 'F', endTween: 0.5),
+                DoTWCircularProgressIndicator(text: 'S', endTween: 0.0),
               ],
             ),
             const SizedBox(height: 20),
@@ -206,7 +180,7 @@ class _MyDayPageState extends State<MyDayPage> {
             SfCartesianChart(
               title: const ChartTitle(text: 'Water consumption today'),
               primaryXAxis: const CategoryAxis(),
-              legend: const Legend(isVisible: false),
+              legend: const Legend(isVisible: true),
               series: <CartesianSeries>[
                 AreaSeries<ChartData, String>(
                   color: Theme.of(context).colorScheme.onPrimary,
@@ -267,4 +241,35 @@ class ChartData {
   final String x;
   final double? y;
   final double? y2;
+}
+
+class DoTWCircularProgressIndicator extends StatelessWidget {
+  final String text;
+  final double endTween;
+
+  const DoTWCircularProgressIndicator({
+    Key? key,
+    required this.text,
+    required this.endTween,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 0.0, end: endTween),
+          duration: const Duration(milliseconds: 1000),
+          curve: Curves.easeInOut,
+          builder: (context, value, _) => CircularProgressIndicator(
+            value: value,
+            strokeCap: StrokeCap.round,
+            strokeWidth: 5,
+          ),
+        ),
+        Text(text),
+      ],
+    );
+  }
 }

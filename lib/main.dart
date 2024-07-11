@@ -6,7 +6,7 @@ import 'pages/my_day_page.dart';
 import 'pages/tracking_page.dart';
 import 'pages/recommendations_page.dart';
 
-void main() => runApp(WaterTrackerApp());
+void main() => runApp(const WaterTrackerApp());
 
 class WaterTrackerApp extends StatefulWidget {
   const WaterTrackerApp({Key? key}) : super(key: key);
@@ -22,22 +22,25 @@ class _WaterTrackerAppState extends State<WaterTrackerApp> {
     return MaterialApp(
       title: 'Water Tracker',
       theme: Styles.themeData(true, Colors.indigo),
-      home: HomePage(),
+      home: const HomePage(),
     );
   }
 }
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
+  // ignore: library_private_types_in_public_api
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  static List<Widget> _pages = <Widget>[
-    MyDayPage(),
-    TrackingPage(),
+  static final List<Widget> _pages = <Widget>[
+    const MyDayPage(),
+    const TrackingPage(),
     RecommendationsPage(),
   ];
 
@@ -52,7 +55,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.bluetooth),
+          icon: const Icon(Icons.bluetooth),
           onPressed: () {
             Navigator.push(
               context,
@@ -60,10 +63,10 @@ class _HomePageState extends State<HomePage> {
             );
           },
         ),
-        title: Text('Water Tracker'),
+        title: const Text('Water Tracker'),
         actions: [
           IconButton(
-            icon: Icon(Icons.account_circle),
+            icon: const Icon(Icons.account_circle),
             onPressed: () {
               Navigator.push(
                 context,

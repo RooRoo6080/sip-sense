@@ -101,10 +101,12 @@ class _TrackingPageState extends State<TrackingPage> {
                 yValueMapper: (CircleChartData data, _) => data.y,
                 dataLabelMapper: (CircleChartData data, _) => data.x,
                 sortingOrder: SortingOrder.ascending,
+                explode: true,
                 dataLabelSettings: const DataLabelSettings(
                   showZeroValue: false,
                   isVisible: true,
                   labelPosition: ChartDataLabelPosition.outside,
+                  textStyle: TextStyle(fontSize: 10),
                 ),
               ),
             ],
