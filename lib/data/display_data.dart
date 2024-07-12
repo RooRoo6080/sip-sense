@@ -1,7 +1,7 @@
 class DisplayData {
   static Map displayData() {
     final Map data = {};
-    data.addAll({"consumedToday": 38});
+    data.addAll({"consumedToday": 32});
     data.addAll({"consumeGoal": 45});
     data.addAll({"waterInBottle": 6});
     data.addAll({"sundayConsumed": 38});
@@ -21,7 +21,7 @@ class DisplayData {
     return data;
   }
 
-  List<ChartData> dayChartData() {
+  static List<ChartData> dayChartData() {
     final List<ChartData> chartData = [
       ChartData('1am', 0, 0),
       ChartData('2am', 0, 0),
@@ -50,20 +50,20 @@ class DisplayData {
     return chartData;
   }
 
-  List<ChartData> weekChartData() {
+  static List<ChartData> weekChartData() {
     final List<ChartData> chartData = [
-      ChartData('S', 10, 30),
-      ChartData('M', 11, 35),
-      ChartData('T', 29, 40),
-      ChartData('W', 32, 45),
-      ChartData('T', 35, 50),
-      ChartData('F', 43, 55),
-      ChartData('S', 54, 60),
+      ChartData('Sun.', 10, 30),
+      ChartData('Mon.', 11, 35),
+      ChartData('Tue.', 29, 40),
+      ChartData('Wed.', 32, 45),
+      ChartData('Thu.', 35, 50),
+      ChartData('Fri.', 43, 55),
+      ChartData('Sat.', 54, 60),
     ];
     return chartData;
   }
 
-  List<ChartData> monthChartData() {
+  static List<ChartData> monthChartData() {
     final List<ChartData> chartData = [
       ChartData('1', 0, 0),
       ChartData('2', 0, 0),
@@ -100,7 +100,7 @@ class DisplayData {
     return chartData;
   }
 
-  List<ChartData> yearChartData() {
+  static List<ChartData> yearChartData() {
     final List<ChartData> chartData = [
       ChartData('January', 11, 35),
       ChartData('February', 29, 40),
@@ -118,9 +118,38 @@ class DisplayData {
     return chartData;
   }
 
-  List<ChartData> allTimeChartData() {
+  static List<ChartData> allTimeChartData() {
     final List<ChartData> chartData = [
       ChartData('2024', 11, 35),
+    ];
+    return chartData;
+  }
+
+  static List<ChartData> whenDrinkWaterAverage() {
+    final List<ChartData> chartData = [
+      ChartData('1am', 0, 0),
+      ChartData('2am', 0, 0),
+      ChartData('3am', 0, 0),
+      ChartData('4am', 0, 0),
+      ChartData('5am', 0, 0),
+      ChartData('6am', 0, 0),
+      ChartData('7am', 0, 0),
+      ChartData('8am', 0, 5),
+      ChartData('9am', 3, 10),
+      ChartData('10am', 5, 15),
+      ChartData('11am', 7, 20),
+      ChartData('12pm', 10, 25),
+      ChartData('1pm', 10, 30),
+      ChartData('2pm', 11, 35),
+      ChartData('3pm', 29, 40),
+      ChartData('4pm', 32, 45),
+      ChartData('5pm', 35, 50),
+      ChartData('6pm', 43, 55),
+      ChartData('7pm', 54, 60),
+      ChartData('8pm', 55, 65),
+      ChartData('9pm', 58, 70),
+      ChartData('10pm', 59, 75),
+      ChartData('11pm', 59, 75),
     ];
     return chartData;
   }

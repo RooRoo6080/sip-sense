@@ -6,7 +6,9 @@ import 'pages/my_day_page.dart';
 import 'pages/tracking_page.dart';
 import 'pages/recommendations_page.dart';
 
-void main() => runApp(const WaterTrackerApp());
+void main() async {
+  runApp(const WaterTrackerApp());
+}
 
 class WaterTrackerApp extends StatefulWidget {
   const WaterTrackerApp({Key? key}) : super(key: key);
@@ -59,7 +61,7 @@ class _HomePageState extends State<HomePage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => ConnectionPage()),
+              MaterialPageRoute(builder: (context) => const ConnectionPage()),
             );
           },
         ),
@@ -70,7 +72,7 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SettingsPage()),
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
               );
             },
           ),

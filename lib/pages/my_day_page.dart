@@ -1,7 +1,8 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:waterbottle/data/display_data.dart';
-
+import 'package:animated_digit/animated_digit.dart';
 
 class MyDayPage extends StatefulWidget {
   const MyDayPage({Key? key}) : super(key: key);
@@ -17,7 +18,7 @@ class _MyDayPageState extends State<MyDayPage> {
 
   @override
   void initState() {
-    _chartData = getChartData();
+    _chartData = DisplayData.dayChartData();
     super.initState();
   }
 
@@ -43,7 +44,11 @@ class _MyDayPageState extends State<MyDayPage> {
                             width: 250,
                             height: 250,
                             child: TweenAnimationBuilder<double>(
-                              tween: Tween<double>(begin: 0.0, end: DisplayData.displayData()["consumedToday"] / DisplayData.displayData()["consumeGoal"]),
+                              tween: Tween<double>(
+                                  begin: 0.0,
+                                  end: DisplayData.displayData()[
+                                          "consumedToday"] /
+                                      DisplayData.displayData()["consumeGoal"]),
                               duration: const Duration(milliseconds: 3500),
                               curve: Curves.bounceInOut,
                               builder: (context, value, _) =>
@@ -59,24 +64,37 @@ class _MyDayPageState extends State<MyDayPage> {
                             children: [
                               Column(
                                 children: [
-                                  Text(
-                                    style: const TextStyle(
+                                  AnimatedDigitWidget(
+                                    textStyle: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 40,
+                                      fontFamily: GoogleFonts.montserrat()
+                                          .toString(),
                                     ),
-                                    DisplayData.displayData()["consumedToday"].toString(),
+                                    duration:
+                                        const Duration(milliseconds: 3500),
+                                    curve: Curves.bounceInOut,
+                                    value: DisplayData.displayData()[
+                                        "consumedToday"],
                                   ),
-                                  const SizedBox(
+                                  SizedBox(
                                     width: 40,
                                     child: Divider(
-                                        thickness: 1, color: Colors.white),
+                                        thickness: 1,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface),
                                   ),
                                   Text(
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 40,
                                     ),
-                                    DisplayData.displayData()["consumeGoal"].toString(),
+                                    DisplayData.displayData()["consumeGoal"]
+                                        .toString(),
                                   ),
                                 ],
                               ),
@@ -163,16 +181,37 @@ class _MyDayPageState extends State<MyDayPage> {
             ),
             const SizedBox(height: 20),
             // Data points
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                DoTWCircularProgressIndicator(text: 'S', endTween: 0.1),
-                DoTWCircularProgressIndicator(text: 'M', endTween: 1.1),
-                DoTWCircularProgressIndicator(text: 'T', endTween: 0.4),
-                DoTWCircularProgressIndicator(text: 'W', endTween: 0.2),
-                DoTWCircularProgressIndicator(text: 'T', endTween: 0.8),
-                DoTWCircularProgressIndicator(text: 'F', endTween: 0.5),
-                DoTWCircularProgressIndicator(text: 'S', endTween: 0.0),
+                DoTWCircularProgressIndicator(
+                    text: 'S',
+                    endTween: DisplayData.displayData()["sundayConsumed"] /
+                        DisplayData.displayData()["sundayGoal"]),
+                DoTWCircularProgressIndicator(
+                    text: 'M',
+                    endTween: DisplayData.displayData()["mondayConsumed"] /
+                        DisplayData.displayData()["mondayGoal"]),
+                DoTWCircularProgressIndicator(
+                    text: 'T',
+                    endTween: DisplayData.displayData()["tuesdayConsumed"] /
+                        DisplayData.displayData()["tuesdayGoal"]),
+                DoTWCircularProgressIndicator(
+                    text: 'W',
+                    endTween: DisplayData.displayData()["wednesdayConsumed"] /
+                        DisplayData.displayData()["wednesdayGoal"]),
+                DoTWCircularProgressIndicator(
+                    text: 'T',
+                    endTween: DisplayData.displayData()["thursdayConsumed"] /
+                        DisplayData.displayData()["thursdayGoal"]),
+                DoTWCircularProgressIndicator(
+                    text: 'F',
+                    endTween: DisplayData.displayData()["fridayConsumed"] /
+                        DisplayData.displayData()["fridayGoal"]),
+                DoTWCircularProgressIndicator(
+                    text: 'S',
+                    endTween: DisplayData.displayData()["saturdayConsumed"] /
+                        DisplayData.displayData()["saturdayGoal"]),
               ],
             ),
             const SizedBox(height: 20),
@@ -205,42 +244,6 @@ class _MyDayPageState extends State<MyDayPage> {
       ),
     );
   }
-
-  List<ChartData> getChartData() {
-    final List<ChartData> chartData = [
-      ChartData('1am', 0, 0),
-      ChartData('2am', 0, 0),
-      ChartData('3am', 0, 0),
-      ChartData('4am', 0, 0),
-      ChartData('5am', 0, 0),
-      ChartData('6am', 0, 0),
-      ChartData('7am', 0, 0),
-      ChartData('8am', 0, 5),
-      ChartData('9am', 3, 10),
-      ChartData('10am', 5, 15),
-      ChartData('11am', 7, 20),
-      ChartData('12pm', 10, 25),
-      ChartData('1pm', 10, 30),
-      ChartData('2pm', 11, 35),
-      ChartData('3pm', 29, 40),
-      ChartData('4pm', 32, 45),
-      ChartData('5pm', 35, 50),
-      ChartData('6pm', 43, 55),
-      ChartData('7pm', 54, 60),
-      ChartData('8pm', 55, 65),
-      ChartData('9pm', 58, 70),
-      ChartData('10pm', 59, 75),
-      ChartData('11pm', 59, 75),
-    ];
-    return chartData;
-  }
-}
-
-class ChartData {
-  ChartData(this.x, this.y, this.y2);
-  final String x;
-  final double? y;
-  final double? y2;
 }
 
 class DoTWCircularProgressIndicator extends StatelessWidget {
