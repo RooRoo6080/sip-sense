@@ -7,9 +7,9 @@ class ConnectionPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Device Connection'),
+        title: const Text('Device Connection'),
       ),
-      body: Center(
+      body: const Center(
         child: Text('Connect to your water bottle'),
       ),
     );

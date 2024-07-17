@@ -43,7 +43,7 @@ class _HomePageState extends State<HomePage> {
   static final List<Widget> _pages = <Widget>[
     const MyDayPage(),
     const TrackingPage(),
-    RecommendationsPage(),
+    const RecommendationsPage(),
   ];
 
   void _onItemTapped(int index) {

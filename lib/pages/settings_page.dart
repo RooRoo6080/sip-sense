@@ -11,11 +11,37 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   ProfileData profileData = ProfileData();
+  late ConsumptionData _consumptionData;
 
   @override
   void initState() {
     super.initState();
     _loadProfileData();
+    _loadConsumptionData();
+  }
+
+  Future<void> _loadConsumptionData() async {
+    final data = await ConsumptionData.loadConsumptionData();
+    setState(() {
+      _consumptionData = data ??
+          ConsumptionData(
+            waterInBottle: _consumptionData.waterInBottle,
+            bottleCapacity: _consumptionData.bottleCapacity,
+            consumedToday: 0,
+            consumeGoal: 35,
+          );
+    });
+  }
+
+  Future<void> _updateConsumptionData() async {
+    await ConsumptionData.saveConsumptionData(_consumptionData);
+  }
+
+  void _onConsumptionDataChanged(double weight, double adjustment) {
+    setState(() {
+      _consumptionData.consumeGoal = weight / 2 + adjustment;
+    });
+    _updateConsumptionData();
   }
 
   Future<void> _loadProfileData() async {
@@ -28,6 +54,8 @@ class _SettingsPageState extends State<SettingsPage> {
   void _updateProfileData() {
     setState(() {
       profileData.writeProfileData();
+      _onConsumptionDataChanged(
+          profileData.weight, profileData.manualAdjustment.toDouble());
     });
   }
 
@@ -61,37 +89,6 @@ class _SettingsPageState extends State<SettingsPage> {
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 20),
-            const Text('Hours of Exercise'),
-            ...List.generate(7, (index) {
-              return Row(
-                children: [
-                  Text(
-                    style: const TextStyle(fontSize: 12),
-                    _getDayOfWeek(index),
-                  ),
-                  Slider(
-                    value: profileData.exerciseHours[index],
-                    min: 0,
-                    max: 10,
-                    divisions: 20,
-                    label: profileData.exerciseHours[index].toString(),
-                    onChanged: (double value) {
-                      setState(() {
-                        profileData.exerciseHours[index] = value;
-                        _updateProfileData();
-                      });
-                    },
-                  ),
-                  Text(
-                    '${profileData.exerciseHours[index]} hours',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                  const SizedBox(height: 10),
-                ],
-              );
-            }),
-            const SizedBox(height: 20),
             const Text('Your Goal Adjustment'),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -124,26 +121,5 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
     );
-  }
-
-  String _getDayOfWeek(int index) {
-    switch (index) {
-      case 0:
-        return 'Sunday';
-      case 1:
-        return 'Monday';
-      case 2:
-        return 'Tuesday';
-      case 3:
-        return 'Wednesday';
-      case 4:
-        return 'Thursday';
-      case 5:
-        return 'Friday';
-      case 6:
-        return 'Saturday';
-      default:
-        return '';
-    }
   }
 }

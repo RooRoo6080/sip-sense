@@ -4,21 +4,16 @@ import 'package:path_provider/path_provider.dart';
 
 class ProfileData {
   double weight;
-  List<double> exerciseHours;
   int manualAdjustment;
 
   ProfileData({
     this.weight = 70.0,
-    this.exerciseHours = const [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
     this.manualAdjustment = 0,
-  }) {
-    exerciseHours = exerciseHours;
-  }
+  });
 
   Map<String, dynamic> toJson() {
     return {
       'weight': weight,
-      'exerciseHours': exerciseHours,
       'manualAdjustment': manualAdjustment,
     };
   }
@@ -26,8 +21,6 @@ class ProfileData {
   static ProfileData fromJson(Map<String, dynamic> json) {
     return ProfileData(
       weight: json['weight'].toDouble(),
-      exerciseHours:
-          List<double>.from(json['exerciseHours'].map((x) => x.toDouble())),
       manualAdjustment: json['manualAdjustment'],
     );
   }
@@ -51,5 +44,124 @@ class ProfileData {
     final file = await _getLocalFile();
     String json = jsonEncode(toJson());
     await file.writeAsString(json);
+  }
+}
+
+class ConsumptionData {
+  double waterInBottle = 24;
+  double bottleCapacity = 24;
+  double consumedToday = 0;
+  double consumeGoal = 35;
+
+  ConsumptionData({
+    required this.waterInBottle,
+    required this.bottleCapacity,
+    required this.consumedToday,
+    required this.consumeGoal,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'waterInBottle': waterInBottle,
+      'bottleCapacity': bottleCapacity,
+      'consumedToday': consumedToday,
+      'consumeGoal': consumeGoal,
+    };
+  }
+
+  static ConsumptionData fromJson(Map<String, dynamic> json) {
+    return ConsumptionData(
+      waterInBottle: json['waterInBottle'],
+      bottleCapacity: json['bottleCapacity'],
+      consumedToday: json['consumedToday'],
+      consumeGoal: json['consumeGoal'],
+    );
+  }
+
+  static Future<String> get _filePath async {
+    final directory = await getApplicationDocumentsDirectory();
+    return '${directory.path}/consumption_data.json';
+  }
+
+  static Future<void> saveConsumptionData(ConsumptionData data) async {
+    final file = File(await _filePath);
+    await file.writeAsString(jsonEncode(data.toJson()));
+  }
+
+  static Future<ConsumptionData?> loadConsumptionData() async {
+    try {
+      final file = File(await _filePath);
+      if (await file.exists()) {
+        final jsonData = jsonDecode(await file.readAsString());
+        return ConsumptionData.fromJson(jsonData);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+}
+
+class LogEntry {
+  DateTime dateTime;
+  double consumed;
+
+  LogEntry(this.dateTime, this.consumed);
+
+  Map<String, dynamic> toJson() {
+    return {
+      'dateTime': dateTime.toIso8601String(),
+      'consumed': consumed,
+    };
+  }
+
+  static LogEntry fromJson(Map<String, dynamic> json) {
+    return LogEntry(
+      DateTime.parse(json['dateTime']),
+      json['consumed'],
+    );
+  }
+}
+
+class Logs {
+  List<LogEntry> entries;
+
+  Logs({required this.entries});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'entries': entries.map((entry) => entry.toJson()).toList(),
+    };
+  }
+
+  static Logs fromJson(Map<String, dynamic> json) {
+    return Logs(
+      entries: (json['entries'] as List)
+          .map((entryJson) => LogEntry.fromJson(entryJson))
+          .toList(),
+    );
+  }
+
+  static Future<String> get _filePath async {
+    final directory = await getApplicationDocumentsDirectory();
+    return '${directory.path}/logs.json';
+  }
+
+  static Future<void> saveLogs(Logs logs) async {
+    final file = File(await _filePath);
+    await file.writeAsString(jsonEncode(logs.toJson()));
+  }
+
+  static Future<Logs?> loadLogs() async {
+    try {
+      final file = File(await _filePath);
+      if (await file.exists()) {
+        final jsonData = jsonDecode(await file.readAsString());
+        return Logs.fromJson(jsonData);
+      }
+      return Logs(entries: []);
+    } catch (e) {
+      return Logs(entries: []);
+    }
   }
 }

@@ -1,245 +1,374 @@
-import 'package:google_fonts/google_fonts.dart';
+import 'package:countup/countup.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:waterbottle/data/display_data.dart';
-import 'package:animated_digit/animated_digit.dart';
+import 'package:waterbottle/data/db.dart';
+import 'dart:core';
 
 class MyDayPage extends StatefulWidget {
   const MyDayPage({Key? key}) : super(key: key);
-
   @override
   // ignore: library_private_types_in_public_api
   _MyDayPageState createState() => _MyDayPageState();
 }
 
 class _MyDayPageState extends State<MyDayPage> {
-  late List<ChartData> _chartData;
-  var number = 0;
+  Future<List<ChartData>>? _chartData;
+  Future<Map<String, double>>? _displayDataFuture;
+  late ConsumptionData _consumptionData;
 
   @override
   void initState() {
-    _chartData = DisplayData.dayChartData();
     super.initState();
+    _displayDataFuture = DisplayData.displayData();
+    _chartData = DisplayData.dayChartData();
+    _loadConsumptionData();
+    _fetchDisplayData();
+    _fetchChartData();
+  }
+
+  void _fetchDisplayData() {
+    _displayDataFuture = DisplayData.displayData();
+  }
+
+  void _fetchChartData() {
+    _chartData = DisplayData.dayChartData();
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _fetchDisplayData();
+      _fetchChartData();
+    });
+    await _displayDataFuture;
+  }
+
+  Future<void> _loadConsumptionData() async {
+    final data = await ConsumptionData.loadConsumptionData();
+    await Future.delayed(const Duration(seconds: 2));
+    setState(() {
+      _consumptionData = data ??
+          ConsumptionData(
+            waterInBottle: _consumptionData.waterInBottle,
+            bottleCapacity: _consumptionData.bottleCapacity,
+            consumedToday: 0,
+            consumeGoal: 35,
+          );
+      rebuildAllChildren(context);
+    });
+  }
+
+  Future<void> _updateConsumptionData() async {
+    setState(() async {
+      await ConsumptionData.saveConsumptionData(_consumptionData);
+      _loadConsumptionData();
+      _refreshData;
+    });
+  }
+
+  void _onBottleFilled(double amount) {
+    setState(() {
+      _consumptionData.waterInBottle = _consumptionData.bottleCapacity;
+    });
+    _updateConsumptionData();
+  }
+
+  void _onWaterDrunk(double amount) {
+    setState(() {
+      _consumptionData.consumedToday += amount;
+      _consumptionData.waterInBottle -= amount;
+    });
+    _updateConsumptionData();
+  }
+
+  void rebuildAllChildren(BuildContext context) {
+    void rebuild(Element el) {
+      el.markNeedsBuild();
+      el.visitChildren(rebuild);
+    }
+
+    (context as Element).visitChildren(rebuild);
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Circular status graphic
-            Center(
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
+    rebuildAllChildren(context);
+    return Scaffold(
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              FutureBuilder<dynamic>(
+                future: _displayDataFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData) {
+                    return const Center(child: Text('No data available'));
+                  } else if (snapshot.connectionState == ConnectionState.done) {
+                    final displayData = snapshot.data!;
+                    final consumedToday = displayData["consumedToday"];
+                    final consumeGoal = displayData["consumeGoal"];
+                    final waterInBottle = displayData["waterInBottle"];
+                    final bottleCapacity = displayData["bottleCapacity"];
+                    final sundayConsumed = displayData["sundayConsumed"];
+                    final mondayConsumed = displayData["mondayConsumed"];
+                    final tuesdayConsumed = displayData["tuesdayConsumed"];
+                    final wednesdayConsumed = displayData["wednesdayConsumed"];
+                    final thursdayConsumed = displayData["thursdayConsumed"];
+                    final fridayConsumed = displayData["fridayConsumed"];
+                    final saturdayConsumed = displayData["saturdayConsumed"];
+                    return Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
                         children: [
-                          SizedBox(
-                            width: 250,
-                            height: 250,
-                            child: TweenAnimationBuilder<double>(
-                              tween: Tween<double>(
-                                  begin: 0.0,
-                                  end: DisplayData.displayData()[
-                                          "consumedToday"] /
-                                      DisplayData.displayData()["consumeGoal"]),
-                              duration: const Duration(milliseconds: 3500),
-                              curve: Curves.bounceInOut,
-                              builder: (context, value, _) =>
-                                  CircularProgressIndicator(
-                                value: value,
-                                strokeCap: StrokeCap.round,
-                                strokeWidth: 25,
-                              ),
+                          Center(
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 20),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        SizedBox(
+                                          width: 250,
+                                          height: 250,
+                                          child: TweenAnimationBuilder<double>(
+                                            tween: Tween<double>(
+                                                begin: 0.0,
+                                                end: consumedToday! /
+                                                    consumeGoal!),
+                                            duration: const Duration(
+                                                milliseconds: 1000),
+                                            curve: Curves.easeInOut,
+                                            builder: (context, value, _) =>
+                                                CircularProgressIndicator(
+                                              value: value,
+                                              strokeCap: StrokeCap.round,
+                                              strokeWidth: 25,
+                                            ),
+                                          ),
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Column(
+                                              children: [
+                                                Countup(
+                                                  begin: 0.0,
+                                                  end: consumedToday,
+                                                  curve: Curves.easeInOut,
+                                                  style: TextStyle(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 40,
+                                                  ),
+                                                  duration: const Duration(
+                                                      milliseconds: 1000),
+                                                ),
+                                                SizedBox(
+                                                  width: 40,
+                                                  child: Divider(
+                                                    thickness: 1,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 40,
+                                                  ),
+                                                  consumeGoal.toString(),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(width: 10),
+                                            const Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text('oz\nconsumed'),
+                                                SizedBox(height: 5),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      children: [
+                                        SizedBox(
+                                          width: 40,
+                                          height: 40,
+                                          child: FloatingActionButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                _onBottleFilled(0);
+                                                rebuildAllChildren(context);
+                                                // Navigator.popAndPushNamed(
+                                                //     context, '/screenname');
+                                              });
+                                            },
+                                            child: const Icon(
+                                              Icons.water_drop,
+                                              size: 20,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 170),
+                                        SizedBox(
+                                          width: 40,
+                                          height: 40,
+                                          child: FloatingActionButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                _onWaterDrunk(2);
+                                                rebuildAllChildren(context);
+                                                // Navigator.popAndPushNamed(
+                                                //     context, '/screenname');
+                                              });
+                                            },
+                                            child: const Icon(
+                                              Icons.add,
+                                              size: 20,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          const SizedBox(height: 50),
+                          Column(
                             children: [
-                              Column(
-                                children: [
-                                  AnimatedDigitWidget(
-                                    textStyle: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 40,
-                                      fontFamily: GoogleFonts.montserrat()
-                                          .toString(),
-                                    ),
-                                    duration:
-                                        const Duration(milliseconds: 3500),
-                                    curve: Curves.bounceInOut,
-                                    value: DisplayData.displayData()[
-                                        "consumedToday"],
+                              ClipRRect(
+                                borderRadius: const BorderRadius.all(
+                                    Radius.circular(12.5)),
+                                child: TweenAnimationBuilder<double>(
+                                  tween: Tween<double>(
+                                      begin: 0.0,
+                                      end: waterInBottle! / bottleCapacity!),
+                                  duration: const Duration(milliseconds: 1000),
+                                  curve: Curves.easeInOut,
+                                  builder: (context, value, _) =>
+                                      LinearProgressIndicator(
+                                    value: value,
+                                    minHeight: 25,
                                   ),
-                                  SizedBox(
-                                    width: 40,
-                                    child: Divider(
-                                        thickness: 1,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface),
-                                  ),
-                                  Text(
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 40,
-                                    ),
-                                    DisplayData.displayData()["consumeGoal"]
-                                        .toString(),
-                                  ),
-                                ],
+                                ),
                               ),
-                              const SizedBox(width: 10),
-                              const Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('oz\nconsumed'),
-                                  SizedBox(height: 5),
-                                ],
+                              const SizedBox(height: 5),
+                              Text(
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                '$waterInBottle oz left in bottle',
                               ),
                             ],
                           ),
+                          const SizedBox(height: 20),
+                          const Divider(
+                            thickness: 1,
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              DoTWCircularProgressIndicator(
+                                text: 'S',
+                                endTween: sundayConsumed! / consumeGoal,
+                              ),
+                              DoTWCircularProgressIndicator(
+                                text: 'M',
+                                endTween: mondayConsumed! / consumeGoal,
+                              ),
+                              DoTWCircularProgressIndicator(
+                                text: 'T',
+                                endTween: tuesdayConsumed! / consumeGoal,
+                              ),
+                              DoTWCircularProgressIndicator(
+                                text: 'W',
+                                endTween: wednesdayConsumed! / consumeGoal,
+                              ),
+                              DoTWCircularProgressIndicator(
+                                text: 'T',
+                                endTween: thursdayConsumed! / consumeGoal,
+                              ),
+                              DoTWCircularProgressIndicator(
+                                text: 'F',
+                                endTween: fridayConsumed! / consumeGoal,
+                              ),
+                              DoTWCircularProgressIndicator(
+                                text: 'S',
+                                endTween: saturdayConsumed! / consumeGoal,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
                         ],
                       ),
-                      Column(
-                        children: [
-                          SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: FloatingActionButton(
-                              onPressed: () {
-                                setState(() {
-                                  number++;
-                                });
-                              },
-                              child: const Icon(
-                                Icons.water_drop,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 170),
-                          SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: FloatingActionButton(
-                              onPressed: () {
-                                setState(() {
-                                  number++;
-                                });
-                              },
-                              child: const Icon(
-                                Icons.add,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ],
-                      )
-                    ],
-                  ),
-                ],
+                    );
+                  } else {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                },
               ),
-            ),
-            const SizedBox(height: 50),
-            // Linear status bar
-            Column(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.all(Radius.circular(12.5)),
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween<double>(begin: 0.0, end: .3),
-                    duration: const Duration(milliseconds: 1000),
-                    curve: Curves.easeInOut,
-                    builder: (context, value, _) => LinearProgressIndicator(
-                      value: value,
-                      minHeight: 25,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  '${DisplayData.displayData()["waterInBottle"]} oz left in bottle',
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            const Divider(
-              thickness: 1,
-            ),
-            const SizedBox(height: 20),
-            // Data points
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                DoTWCircularProgressIndicator(
-                    text: 'S',
-                    endTween: DisplayData.displayData()["sundayConsumed"] /
-                        DisplayData.displayData()["sundayGoal"]),
-                DoTWCircularProgressIndicator(
-                    text: 'M',
-                    endTween: DisplayData.displayData()["mondayConsumed"] /
-                        DisplayData.displayData()["mondayGoal"]),
-                DoTWCircularProgressIndicator(
-                    text: 'T',
-                    endTween: DisplayData.displayData()["tuesdayConsumed"] /
-                        DisplayData.displayData()["tuesdayGoal"]),
-                DoTWCircularProgressIndicator(
-                    text: 'W',
-                    endTween: DisplayData.displayData()["wednesdayConsumed"] /
-                        DisplayData.displayData()["wednesdayGoal"]),
-                DoTWCircularProgressIndicator(
-                    text: 'T',
-                    endTween: DisplayData.displayData()["thursdayConsumed"] /
-                        DisplayData.displayData()["thursdayGoal"]),
-                DoTWCircularProgressIndicator(
-                    text: 'F',
-                    endTween: DisplayData.displayData()["fridayConsumed"] /
-                        DisplayData.displayData()["fridayGoal"]),
-                DoTWCircularProgressIndicator(
-                    text: 'S',
-                    endTween: DisplayData.displayData()["saturdayConsumed"] /
-                        DisplayData.displayData()["saturdayGoal"]),
-              ],
-            ),
-            const SizedBox(height: 20),
-            const Divider(),
-            SfCartesianChart(
-              title: const ChartTitle(text: 'Water consumption today'),
-              primaryXAxis: const CategoryAxis(),
-              legend: const Legend(isVisible: true),
-              series: <CartesianSeries>[
-                AreaSeries<ChartData, String>(
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  opacity: 1,
-                  dataSource: _chartData,
-                  xValueMapper: (ChartData data, _) => data.x,
-                  yValueMapper: (ChartData data, _) => data.y2,
-                  name: "Target",
-                ),
-                AreaSeries<ChartData, String>(
-                  color: Theme.of(context).colorScheme.primary,
-                  opacity: 0.7,
-                  dataSource: _chartData,
-                  xValueMapper: (ChartData data, _) => data.x,
-                  yValueMapper: (ChartData data, _) => data.y,
-                  name: "You",
-                ),
-              ],
-            ),
-          ],
+              const Divider(),
+              FutureBuilder<dynamic>(
+                future: _chartData,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData) {
+                    return const Center(child: Text('No data available'));
+                  } else if (snapshot.connectionState == ConnectionState.done) {
+                    final chartdata = snapshot.data!;
+                    return SfCartesianChart(
+                      title: const ChartTitle(text: 'Water consumption today'),
+                      primaryXAxis: const CategoryAxis(),
+                      legend: const Legend(isVisible: true),
+                      series: <CartesianSeries>[
+                        AreaSeries<ChartData, String>(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          opacity: 1,
+                          dataSource: chartdata,
+                          xValueMapper: (ChartData data, _) => data.x,
+                          yValueMapper: (ChartData data, _) => data.y2,
+                          name: "Target",
+                        ),
+                        AreaSeries<ChartData, String>(
+                          color: Theme.of(context).colorScheme.primary,
+                          opacity: 0.7,
+                          dataSource: chartdata,
+                          xValueMapper: (ChartData data, _) => data.x,
+                          yValueMapper: (ChartData data, _) => data.y,
+                          name: "You",
+                        ),
+                      ],
+                    );
+                  } else {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
