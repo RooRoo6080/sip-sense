@@ -49,8 +49,8 @@ class _MyDayPageState extends State<MyDayPage> {
     setState(() {
       _consumptionData = data ??
           ConsumptionData(
-            waterInBottle: _consumptionData.waterInBottle,
-            bottleCapacity: _consumptionData.bottleCapacity,
+            waterInBottle: 0,
+            bottleCapacity: 24,
             consumedToday: 0,
             consumeGoal: 35,
           );

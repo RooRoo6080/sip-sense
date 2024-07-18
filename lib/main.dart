@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:waterbottle/data/theme_data.dart';
+import 'package:waterbottle/pages/logs_page.dart';
 import 'pages/connection_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/my_day_page.dart';
 import 'pages/tracking_page.dart';
 import 'pages/recommendations_page.dart';
+// import 'pages/logs_page.dart';
 
 void main() async {
   runApp(const WaterTrackerApp());
@@ -43,7 +45,8 @@ class _HomePageState extends State<HomePage> {
   static final List<Widget> _pages = <Widget>[
     const MyDayPage(),
     const TrackingPage(),
-    const RecommendationsPage(),
+    // const RecommendationsPage(),
+    const LogsPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -80,6 +83,8 @@ class _HomePageState extends State<HomePage> {
       ),
       body: _pages.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
+        selectedItemColor: Theme.of(context).colorScheme.onSurface,
+        unselectedItemColor: Theme.of(context).colorScheme.secondary,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.today),
@@ -91,8 +96,12 @@ class _HomePageState extends State<HomePage> {
           ),
           // BottomNavigationBarItem(
           //   icon: Icon(Icons.recommend),
-          //   label: 'Recommendations',
+          //   label: 'Tips',
           // ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.developer_board),
+            label: 'Logs',
+          ),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
