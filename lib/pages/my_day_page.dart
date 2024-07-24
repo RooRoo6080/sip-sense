@@ -106,7 +106,7 @@ class _MyDayPageState extends State<MyDayPage> {
                     value: newValue,
                     min: 0,
                     max: _consumptionData.bottleCapacity,
-                    divisions: 48,
+                    divisions: (_consumptionData.bottleCapacity * 2).toInt(),
                     label: newValue.toStringAsFixed(1),
                     onChanged: (double value) {
                       setState(() {
@@ -131,6 +131,7 @@ class _MyDayPageState extends State<MyDayPage> {
                 _addLogEntry(double.parse(newValue.toStringAsFixed(1)));
                 setState(() {
                   _consumptionData.waterInBottle -= newValue;
+                  _displayDataFuture = DisplayData.displayData();
                 });
                 _updateConsumptionData();
                 Navigator.of(context).pop();
@@ -339,6 +340,8 @@ class _MyDayPageState extends State<MyDayPage> {
                                       onPressed: () {
                                         setState(() {
                                           _onBottleFilled(false);
+                                          _displayDataFuture =
+                                              DisplayData.displayData();
                                         });
                                       },
                                       child: const Icon(
@@ -361,6 +364,8 @@ class _MyDayPageState extends State<MyDayPage> {
                                       onPressed: () {
                                         setState(() {
                                           _onBottleFilled(true);
+                                          _displayDataFuture =
+                                              DisplayData.displayData();
                                         });
                                       },
                                       child: const Icon(
