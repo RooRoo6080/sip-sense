@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:waterbottle/data/display_data.dart';
 import 'package:waterbottle/data/db.dart';
+import 'package:waterbottle/data/logs.dart';
 import 'dart:core';
 
 class MyDayPage extends StatefulWidget {
@@ -14,7 +15,7 @@ class MyDayPage extends StatefulWidget {
 
 class _MyDayPageState extends State<MyDayPage> {
   Future<List<ChartData>>? _chartData;
-  Future<Map<String, double>>? _displayDataFuture;
+  Future<Map<String, dynamic>>? _displayDataFuture;
   late ConsumptionData _consumptionData;
 
   @override
@@ -45,7 +46,7 @@ class _MyDayPageState extends State<MyDayPage> {
 
   Future<void> _loadConsumptionData() async {
     final data = await ConsumptionData.loadConsumptionData();
-    await Future.delayed(const Duration(seconds: 2));
+    // await Future.delayed(const Duration(seconds: 2));
     setState(() {
       _consumptionData = data ??
           ConsumptionData(
@@ -53,6 +54,7 @@ class _MyDayPageState extends State<MyDayPage> {
             bottleCapacity: 24,
             consumedToday: 0,
             consumeGoal: 35,
+            lastUpdated: DateTime.now().toIso8601String(),
           );
       rebuildAllChildren(context);
     });
@@ -88,6 +90,54 @@ class _MyDayPageState extends State<MyDayPage> {
     }
 
     (context as Element).visitChildren(rebuild);
+  }
+
+  void _showAddLogDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        double newValue = 0.0;
+        return AlertDialog(
+          title: const Text('Add Log Entry'),
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Slider(
+                    value: newValue,
+                    min: 0,
+                    max: 24,
+                    divisions: 48,
+                    label: newValue.toStringAsFixed(1),
+                    onChanged: (double value) {
+                      setState(() {
+                        newValue = value;
+                      });
+                    },
+                  ),
+                  Text(newValue.toStringAsFixed(1)),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -215,7 +265,7 @@ class _MyDayPageState extends State<MyDayPage> {
                                             onPressed: () {
                                               setState(() {
                                                 _onBottleFilled(0);
-                                                rebuildAllChildren(context);
+                                                // rebuildAllChildren(context);
                                                 // Navigator.popAndPushNamed(
                                                 //     context, '/screenname');
                                               });
@@ -234,7 +284,7 @@ class _MyDayPageState extends State<MyDayPage> {
                                             onPressed: () {
                                               setState(() {
                                                 _onWaterDrunk(2);
-                                                rebuildAllChildren(context);
+                                                // rebuildAllChildren(context);
                                                 // Navigator.popAndPushNamed(
                                                 //     context, '/screenname');
                                               });

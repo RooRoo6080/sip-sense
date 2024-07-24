@@ -56,6 +56,7 @@ class _LogsPageState extends State<LogsPage> {
       bottleCapacity: double.parse(_bottleCapacityController.text),
       consumedToday: double.parse(_consumedTodayController.text),
       consumeGoal: double.parse(_consumeGoalController.text),
+      lastUpdated: DateTime.now().toIso8601String(),
     );
     await ConsumptionData.saveConsumptionData(consumptionData);
   }
@@ -186,25 +187,28 @@ class _LogsPageState extends State<LogsPage> {
                   return const Center(child: Text('No logs available'));
                 } else {
                   final logs = snapshot.data!;
-                  return RefreshIndicator(
-                    onRefresh: _refreshLogs,
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: logs.entries.length,
-                      itemBuilder: (context, index) {
-                        final entry = logs.entries[index];
-                        return ListTile(
-                          title: Text(
-                            'Date: ${entry.dateTime}',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          subtitle: Text(
-                            'Consumed: ${entry.consumed.toStringAsFixed(1)} oz',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          onTap: () {},
-                        );
-                      },
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(8.0, 8.0, 50.0, 8.0),
+                    child: RefreshIndicator(
+                      onRefresh: _refreshLogs,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: logs.entries.length,
+                        itemBuilder: (context, index) {
+                          final entry = logs.entries[index];
+                          return ListTile(
+                            title: Text(
+                              'Date: ${entry.dateTime}',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            subtitle: Text(
+                              'Consumed: ${entry.consumed.toStringAsFixed(1)} oz',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            onTap: () {},
+                          );
+                        },
+                      ),
                     ),
                   );
                 }
@@ -250,7 +254,6 @@ class _LogsPageState extends State<LogsPage> {
                 }
               },
             ),
-            // FutureBuilder for ConsumptionData
             FutureBuilder<ConsumptionData?>(
               future: _consumptionDataFuture,
               builder: (context, snapshot) {
@@ -304,8 +307,9 @@ class _LogsPageState extends State<LogsPage> {
                     ),
                   );
                 } else {
-                  return const Center(
-                      child: Text('No consumption data available'));
+                  return Center(
+                      child: Text(
+                          'No consumption data available ${snapshot.connectionState} ${snapshot.data} ${DateTime.now()}'));
                 }
               },
             ),
@@ -334,7 +338,7 @@ class _LogsPageState extends State<LogsPage> {
                                     ? _rawController
                                     : _formattedController,
                                 maxLines: null,
-                                style: const TextStyle(fontSize: 12 ),
+                                style: const TextStyle(fontSize: 12),
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
                                   labelText: 'Logs JSON',

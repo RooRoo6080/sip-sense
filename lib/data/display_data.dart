@@ -1,170 +1,309 @@
 import 'package:waterbottle/data/db.dart';
+import 'dart:async';
+import 'package:intl/intl.dart';
+import 'package:waterbottle/data/logs.dart';
 
 class DisplayData {
-  static Future<Map<String, double>> displayData() async {
+  static Future<Map<String, dynamic>> displayData() async {
     final consumptionData = await ConsumptionData.loadConsumptionData();
-    final Map<String, double> data = {};
+    final Map<String, dynamic> data = {};
 
     if (consumptionData != null) {
       data['consumedToday'] = consumptionData.consumedToday;
       data['consumeGoal'] = consumptionData.consumeGoal;
       data['waterInBottle'] = consumptionData.waterInBottle;
       data['bottleCapacity'] = consumptionData.bottleCapacity;
-      data.addAll({"sundayConsumed": 38});
-      data.addAll({"mondayConsumed": 45});
-      data.addAll({"tuesdayConsumed": 38});
-      data.addAll({"wednesdayConsumed": 32});
-      data.addAll({"thursdayConsumed": 13});
-      data.addAll({"fridayConsumed": 63});
-      data.addAll({"saturdayConsumed": 38});
+      data['lastUpdated'] = DateTime.now().toIso8601String();
     }
+
+    final logs = await Logs.loadLogs();
+    if (logs != null) {
+      final Map<String, double> weeklyConsumption = {
+        'sunday': 0,
+        'monday': 0,
+        'tuesday': 0,
+        'wednesday': 0,
+        'thursday': 0,
+        'friday': 0,
+        'saturday': 0,
+      };
+
+      final now = DateTime.now();
+      final startOfWeek = now.subtract(Duration(days: now.weekday % 7));
+      final endOfWeek = startOfWeek.add(const Duration(days: 6));
+
+      for (final entry in logs.entries) {
+        final entryDay =
+            DateFormat('EEEE').format(entry.dateTime).toLowerCase();
+        if (entry.dateTime.isAfter(startOfWeek) &&
+                entry.dateTime.isBefore(endOfWeek) ||
+            entry.dateTime.isAtSameMomentAs(now)) {
+          weeklyConsumption[entryDay] =
+              (weeklyConsumption[entryDay] ?? 0) + entry.consumed;
+        }
+      }
+
+      data.addAll({
+        'sundayConsumed': weeklyConsumption['sunday'] ?? 0,
+        'mondayConsumed': weeklyConsumption['monday'] ?? 0,
+        'tuesdayConsumed': weeklyConsumption['tuesday'] ?? 0,
+        'wednesdayConsumed': weeklyConsumption['wednesday'] ?? 0,
+        'thursdayConsumed': weeklyConsumption['thursday'] ?? 0,
+        'fridayConsumed': weeklyConsumption['friday'] ?? 0,
+        'saturdayConsumed': weeklyConsumption['saturday'] ?? 0,
+      });
+    }
+
     return data;
   }
 
   static Future<List<ChartData>> dayChartData() async {
-    final consumptionData = await ConsumptionData.loadConsumptionData();
-    final goal = consumptionData?.consumeGoal;
+    final logs = await Logs.loadLogs();
+    final goal =
+        (await ConsumptionData.loadConsumptionData())?.consumeGoal ?? 0.0;
+    final Map<int, double> hourlyConsumption = {};
+    final now = DateTime.now();
 
-    final List<ChartData> chartData = [
-      ChartData('1am', 0, 0),
-      ChartData('2am', 0, 0),
-      ChartData('3am', 0, 0),
-      ChartData('4am', 0, 0),
-      ChartData('5am', 0, 0),
-      ChartData('6am', 0, 0),
-      ChartData('7am', 0, 0),
-      ChartData('8am', 0, goal! * 1 / 15),
-      ChartData('9am', 3, goal * 2 / 16),
-      ChartData('10am', 5, goal * 3 / 16),
-      ChartData('11am', 7, goal * 4 / 16),
-      ChartData('12pm', 10, goal * 5 / 16),
-      ChartData('1pm', 10, goal * 6 / 16),
-      ChartData('2pm', 11, goal * 7 / 16),
-      ChartData('3pm', 29, goal * 8 / 16),
-      ChartData('4pm', 32, goal * 9 / 16),
-      ChartData('5pm', 35, goal * 10 / 16),
-      ChartData('6pm', 43, goal * 11 / 16),
-      ChartData('7pm', 54, goal * 12 / 16),
-      ChartData('8pm', 55, goal * 13 / 16),
-      ChartData('9pm', 58, goal * 14 / 16),
-      ChartData('10pm', 59, goal * 15 / 16),
-      ChartData('11pm', 59, goal),
-      ChartData('12am', 59, goal),
-    ];
+    if (logs != null) {
+      for (var entry in logs.entries) {
+        if (entry.dateTime.year == now.year &&
+            entry.dateTime.month == now.month &&
+            entry.dateTime.day == now.day) {
+          final hour = entry.dateTime.hour;
+          hourlyConsumption[hour] =
+              (hourlyConsumption[hour] ?? 0) + entry.consumed;
+        }
+      }
+    }
+
+    double cumulativeConsumed = 0.0;
+    final List<ChartData> chartData = List.generate(24, (index) {
+      final hour = index;
+      cumulativeConsumed += hourlyConsumption[hour] ?? 0.0;
+      final goalProgress = (hour >= 7 && hour <= 23)
+          ? goal * (hour - 7) / (23 - 7)
+          : (hour > 23 ? goal : 0.0);
+
+      return ChartData(
+        '${hour % 12 == 0 ? 12 : hour % 12}${hour < 12 ? 'am' : 'pm'}',
+        cumulativeConsumed,
+        goalProgress,
+      );
+    });
+
     return chartData;
   }
 
   static Future<List<ChartData>> weekChartData() async {
-    final consumptionData = await ConsumptionData.loadConsumptionData();
-    final goal = consumptionData?.consumeGoal;
+    final logs = await Logs.loadLogs();
+    final goal =
+        (await ConsumptionData.loadConsumptionData())?.consumeGoal ?? 0.0;
+    final Map<String, double> weeklyConsumption = {
+      'Sun.': 0.0,
+      'Mon.': 0.0,
+      'Tue.': 0.0,
+      'Wed.': 0.0,
+      'Thu.': 0.0,
+      'Fri.': 0.0,
+      'Sat.': 0.0,
+    };
+
+    final now = DateTime.now();
+    final startOfWeek = now.subtract(Duration(days: now.weekday));
+    final endOfWeek = startOfWeek.add(const Duration(days: 7));
+
+    if (logs != null) {
+      for (var entry in logs.entries) {
+        if (entry.dateTime.isAfter(startOfWeek) &&
+            entry.dateTime.isBefore(endOfWeek)) {
+          final day = entry.dateTime.weekday;
+          switch (day) {
+            case DateTime.sunday:
+              weeklyConsumption['Sun.'] =
+                  (weeklyConsumption['Sun.'] ?? 0) + entry.consumed;
+              break;
+            case DateTime.monday:
+              weeklyConsumption['Mon.'] =
+                  (weeklyConsumption['Mon.'] ?? 0) + entry.consumed;
+              break;
+            case DateTime.tuesday:
+              weeklyConsumption['Tue.'] =
+                  (weeklyConsumption['Tue.'] ?? 0) + entry.consumed;
+              break;
+            case DateTime.wednesday:
+              weeklyConsumption['Wed.'] =
+                  (weeklyConsumption['Wed.'] ?? 0) + entry.consumed;
+              break;
+            case DateTime.thursday:
+              weeklyConsumption['Thu.'] =
+                  (weeklyConsumption['Thu.'] ?? 0) + entry.consumed;
+              break;
+            case DateTime.friday:
+              weeklyConsumption['Fri.'] =
+                  (weeklyConsumption['Fri.'] ?? 0) + entry.consumed;
+              break;
+            case DateTime.saturday:
+              weeklyConsumption['Sat.'] =
+                  (weeklyConsumption['Sat.'] ?? 0) + entry.consumed;
+              break;
+          }
+        }
+      }
+    }
+
     final List<ChartData> chartData = [
-      ChartData('Sun.', 10, goal),
-      ChartData('Mon.', 11, goal),
-      ChartData('Tue.', 29, goal),
-      ChartData('Wed.', 32, goal),
-      ChartData('Thu.', 35, goal),
-      ChartData('Fri.', 43, goal),
-      ChartData('Sat.', 54, goal),
+      ChartData('Sun.', weeklyConsumption['Sun.'] ?? 0.0, goal),
+      ChartData('Mon.', weeklyConsumption['Mon.'] ?? 0.0, goal),
+      ChartData('Tue.', weeklyConsumption['Tue.'] ?? 0.0, goal),
+      ChartData('Wed.', weeklyConsumption['Wed.'] ?? 0.0, goal),
+      ChartData('Thu.', weeklyConsumption['Thu.'] ?? 0.0, goal),
+      ChartData('Fri.', weeklyConsumption['Fri.'] ?? 0.0, goal),
+      ChartData('Sat.', weeklyConsumption['Sat.'] ?? 0.0, goal),
     ];
+
     return chartData;
   }
 
   static Future<List<ChartData>> monthChartData() async {
-    final consumptionData = await ConsumptionData.loadConsumptionData();
-    final goal = consumptionData?.consumeGoal;
-    final List<ChartData> chartData = [
-      ChartData('1', 0, goal),
-      ChartData('2', 0, goal),
-      ChartData('3', 0, goal),
-      ChartData('4', 0, goal),
-      ChartData('5', 0, goal),
-      ChartData('6', 0, goal),
-      ChartData('7', 0, goal),
-      ChartData('8', 0, goal),
-      ChartData('9', 3, goal),
-      ChartData('10', 5, goal),
-      ChartData('11', 7, goal),
-      ChartData('12', 10, goal),
-      ChartData('13', 10, goal),
-      ChartData('14', 11, goal),
-      ChartData('15', 29, goal),
-      ChartData('16', 32, goal),
-      ChartData('17', 35, goal),
-      ChartData('18', 43, goal),
-      ChartData('19', 54, goal),
-      ChartData('20', 55, goal),
-      ChartData('21', 58, goal),
-      ChartData('22', 59, goal),
-      ChartData('23', 59, goal),
-      ChartData('24', 10, goal),
-      ChartData('25', 11, goal),
-      ChartData('26', 29, goal),
-      ChartData('27', 32, goal),
-      ChartData('28', null, goal),
-      ChartData('29', null, goal),
-      ChartData('30', null, goal),
-      ChartData('31', null, goal),
-    ];
+    final logs = await Logs.loadLogs();
+    final goal =
+        (await ConsumptionData.loadConsumptionData())?.consumeGoal ?? 0.0;
+    final Map<int, double> monthlyConsumption = {};
+    final now = DateTime.now();
+
+    if (logs != null) {
+      for (var entry in logs.entries) {
+        if (entry.dateTime.month == now.month &&
+            entry.dateTime.year == now.year) {
+          final day = entry.dateTime.day;
+          monthlyConsumption[day] =
+              (monthlyConsumption[day] ?? 0) + entry.consumed;
+        }
+      }
+    }
+
+    final List<ChartData> chartData = List.generate(31, (index) {
+      final day = index + 1;
+      return ChartData(
+        day.toString(),
+        day <= now.day ? (monthlyConsumption[day] ?? 0.0) : null,
+        goal,
+      );
+    });
+
     return chartData;
   }
 
   static Future<List<ChartData>> yearChartData() async {
-    final consumptionData = await ConsumptionData.loadConsumptionData();
-    final goal = consumptionData?.consumeGoal;
-    final List<ChartData> chartData = [
-      ChartData('January', 11, goal! * 31),
-      ChartData('February', 29, goal * 28),
-      ChartData('March', 32, goal * 31),
-      ChartData('April', 35, goal * 30),
-      ChartData('May', 43, goal * 31),
-      ChartData('June', 54, goal * 30),
-      ChartData('July', 55, goal * 31),
-      ChartData('August', 58, goal * 31),
-      ChartData('September', 59, goal * 30),
-      ChartData('October', 59, goal * 31),
-      ChartData('November', 10, goal * 30),
-      ChartData('December', 11, goal * 31),
-    ];
+    final logs = await Logs.loadLogs();
+    final goal =
+        (await ConsumptionData.loadConsumptionData())?.consumeGoal ?? 0.0;
+    final Map<int, double> yearlyConsumption = {};
+    final now = DateTime.now();
+
+    if (logs != null) {
+      for (var entry in logs.entries) {
+        if (entry.dateTime.year == now.year) {
+          final month = entry.dateTime.month;
+          yearlyConsumption[month] =
+              (yearlyConsumption[month] ?? 0) + entry.consumed;
+        }
+      }
+    }
+
+    final List<ChartData> chartData = List.generate(12, (index) {
+      final month = index + 1;
+      return ChartData(
+        _getMonthName(month),
+        month <= now.month ? (yearlyConsumption[month] ?? 0.0) : null,
+        goal * _getDaysInMonth(month, now.year),
+      );
+    });
+
     return chartData;
+  }
+
+  static String _getMonthName(int month) {
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ];
+    return monthNames[month - 1];
+  }
+
+  static int _getDaysInMonth(int month, int year) {
+    return DateTime(year, month + 1, 0).day;
   }
 
   static Future<List<ChartData>> allTimeChartData() async {
-    final consumptionData = await ConsumptionData.loadConsumptionData();
-    final goal = consumptionData?.consumeGoal;
-    final List<ChartData> chartData = [
-      ChartData('2024', 11, goal! * 365),
-    ];
+    final logs = await Logs.loadLogs();
+    final goal =
+        (await ConsumptionData.loadConsumptionData())?.consumeGoal ?? 0.0;
+    final Map<int, double> yearlyConsumption = {};
+
+    if (logs != null) {
+      for (var entry in logs.entries) {
+        final year = entry.dateTime.year;
+        yearlyConsumption[year] =
+            (yearlyConsumption[year] ?? 0) + entry.consumed;
+      }
+    }
+
+    final List<ChartData> chartData = yearlyConsumption.entries.map((entry) {
+      final daysInYear = _daysInYear(entry.key);
+      return ChartData(
+        entry.key.toString(),
+        entry.value,
+        goal * daysInYear,
+      );
+    }).toList();
+
     return chartData;
   }
 
+  static int _daysInYear(int year) {
+    final start = DateTime(year, 1, 1);
+    final end = DateTime(year + 1, 1, 1);
+    return end.difference(start).inDays;
+  }
+
   static Future<List<ChartData>> whenDrinkWaterAverage() async {
-    final consumptionData = await ConsumptionData.loadConsumptionData();
-    final goal = consumptionData?.consumeGoal;
-    final List<ChartData> chartData = [
-      ChartData('1am', 0, 0),
-      ChartData('2am', 0, 0),
-      ChartData('3am', 0, 0),
-      ChartData('4am', 0, 0),
-      ChartData('5am', 0, 0),
-      ChartData('6am', 0, 0),
-      ChartData('7am', 0, 0),
-      ChartData('8am', 0, 5),
-      ChartData('9am', 3, 10),
-      ChartData('10am', 5, 15),
-      ChartData('11am', 7, 20),
-      ChartData('12pm', 10, 25),
-      ChartData('1pm', 10, 30),
-      ChartData('2pm', 11, 35),
-      ChartData('3pm', 29, 40),
-      ChartData('4pm', 32, 45),
-      ChartData('5pm', 35, 50),
-      ChartData('6pm', 43, 55),
-      ChartData('7pm', 54, 60),
-      ChartData('8pm', 55, 65),
-      ChartData('9pm', 58, 70),
-      ChartData('10pm', 59, 75),
-      ChartData('11pm', 59, 75),
-    ];
+    final logs = await Logs.loadLogs();
+    final goal =
+        (await ConsumptionData.loadConsumptionData())?.consumeGoal ?? 0.0;
+    final Map<int, double> hourlyConsumption = {};
+    final Map<int, int> hourlyCount = {};
+
+    if (logs != null) {
+      for (var entry in logs.entries) {
+        final hour = entry.dateTime.hour;
+        hourlyConsumption[hour] =
+            (hourlyConsumption[hour] ?? 0) + entry.consumed;
+        hourlyCount[hour] = (hourlyCount[hour] ?? 0) + 1;
+      }
+    }
+
+    final List<ChartData> chartData = List.generate(24, (hour) {
+      final consumption = hourlyConsumption[hour] ?? 0;
+      final count = hourlyCount[hour] ?? 1;
+      final averageConsumption = consumption / count;
+      return ChartData(
+        '$hour:00',
+        averageConsumption,
+        goal / 24,
+      );
+    });
+
     return chartData;
   }
 }

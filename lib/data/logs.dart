@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:waterbottle/data/db.dart';
 
 class Logs {
   List<LogEntry> entries;
@@ -41,6 +42,18 @@ class Logs {
       return Logs(entries: []);
     } catch (e) {
       return Logs(entries: []);
+    }
+  }
+
+  // New method to add a log entry
+  static Future<void> addLogEntry(LogEntry entry) async {
+    final logs = await loadLogs() ?? Logs(entries: []);
+    logs.entries.add(entry);
+    await saveLogs(logs);
+
+    final consumptionData = await ConsumptionData.loadConsumptionData();
+    if (consumptionData != null) {
+      await ConsumptionData.updateConsumptionData(entry.consumed);
     }
   }
 }

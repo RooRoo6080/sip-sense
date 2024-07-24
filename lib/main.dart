@@ -6,9 +6,32 @@ import 'pages/settings_page.dart';
 import 'pages/my_day_page.dart';
 import 'pages/tracking_page.dart';
 import 'pages/recommendations_page.dart';
-// import 'pages/logs_page.dart';
+import 'data/db.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:core';
+
+Future<void> initializeConsumptionData() async {
+  final directory = await getApplicationDocumentsDirectory();
+  final filePath = '${directory.path}/consumption_data.json';
+  final file = File(filePath);
+
+  if (!(await file.exists())) {
+    final defaultData = ConsumptionData(
+      waterInBottle: 24,
+      bottleCapacity: 24,
+      consumedToday: 0,
+      consumeGoal: 35,
+      lastUpdated: DateTime.now().toIso8601String(),
+    );
+    await file.writeAsString(jsonEncode(defaultData.toJson()));
+  }
+}
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeConsumptionData();
   runApp(const WaterTrackerApp());
 }
 

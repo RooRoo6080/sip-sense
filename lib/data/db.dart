@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'dart:core';
 
 class ProfileData {
   double weight;
@@ -48,16 +49,18 @@ class ProfileData {
 }
 
 class ConsumptionData {
-  double waterInBottle = 24;
-  double bottleCapacity = 24;
-  double consumedToday = 0;
-  double consumeGoal = 35;
+  double waterInBottle;
+  double bottleCapacity;
+  double consumedToday;
+  double consumeGoal;
+  String lastUpdated;
 
   ConsumptionData({
     required this.waterInBottle,
     required this.bottleCapacity,
     required this.consumedToday,
     required this.consumeGoal,
+    required this.lastUpdated,
   });
 
   Map<String, dynamic> toJson() {
@@ -66,6 +69,7 @@ class ConsumptionData {
       'bottleCapacity': bottleCapacity,
       'consumedToday': consumedToday,
       'consumeGoal': consumeGoal,
+      'lastUpdated': lastUpdated,
     };
   }
 
@@ -75,6 +79,7 @@ class ConsumptionData {
       bottleCapacity: json['bottleCapacity'],
       consumedToday: json['consumedToday'],
       consumeGoal: json['consumeGoal'],
+      lastUpdated: json['lastUpdated'],
     );
   }
 
@@ -94,10 +99,57 @@ class ConsumptionData {
       if (await file.exists()) {
         final jsonData = jsonDecode(await file.readAsString());
         return ConsumptionData.fromJson(jsonData);
+      } else {
+        return null;
       }
-      return null;
     } catch (e) {
-      return null;
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/consumption_data.json';
+      final file = File(filePath);
+      final defaultData = ConsumptionData(
+        waterInBottle: 24,
+        bottleCapacity: 24,
+        consumedToday: 0,
+        consumeGoal: 35,
+        lastUpdated: DateTime.now().toIso8601String(),
+      );
+      await file.writeAsString(jsonEncode(defaultData.toJson()));
+      final jsonData = jsonDecode(await file.readAsString());
+      return ConsumptionData.fromJson(jsonData);
+    }
+  }
+
+  static Future<void> updateConsumptionData(double consumed) async {
+    final data = await loadConsumptionData();
+    var test = DateTime.parse(data!.lastUpdated);
+    if (data != null) {
+      final now = DateTime.now();
+      if (now.day != test.day ||
+          now.month != test.month ||
+          now.year != test.year) {
+        data.consumedToday = 0;
+      }
+      data.consumedToday += consumed;
+      data.waterInBottle -= consumed;
+      data.lastUpdated = now as String;
+      await saveConsumptionData(data);
+    }
+  }
+
+  static Future<void> initializeConsumptionData() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final filePath = '${directory.path}/consumption_data.json';
+    final file = File(filePath);
+
+    if (!(await file.exists())) {
+      final defaultData = ConsumptionData(
+        waterInBottle: 24,
+        bottleCapacity: 24,
+        consumedToday: 0,
+        consumeGoal: 35,
+        lastUpdated: DateTime.now().toIso8601String(),
+      );
+      await file.writeAsString(jsonEncode(defaultData.toJson()));
     }
   }
 }
