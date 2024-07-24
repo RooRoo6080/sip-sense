@@ -16,7 +16,7 @@ class Styles {
           ),
           titleLarge: GoogleFonts.montserrat(
             fontSize: 30,
-            fontStyle: FontStyle.italic,
+            // fontStyle: FontStyle.italic,
             fontWeight: FontWeight.bold,
           ),
           bodyMedium: GoogleFonts.montserrat(),

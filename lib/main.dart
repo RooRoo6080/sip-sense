@@ -46,7 +46,8 @@ class _WaterTrackerAppState extends State<WaterTrackerApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Water Tracker',
-      theme: Styles.themeData(true, Colors.indigo),
+      debugShowCheckedModeBanner: false,
+      theme: Styles.themeData(true, Colors.blue),
       home: const HomePage(),
     );
   }
@@ -89,7 +90,7 @@ class _HomePageState extends State<HomePage> {
             );
           },
         ),
-        title: const Text('Water Tracker'),
+        title: const Text('Smartwater'),
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle),
@@ -104,8 +105,9 @@ class _HomePageState extends State<HomePage> {
       ),
       body: _pages.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
+        enableFeedback: true,
         selectedItemColor: Theme.of(context).colorScheme.onSurface,
-        unselectedItemColor: Theme.of(context).colorScheme.secondary,
+        unselectedItemColor: Theme.of(context).colorScheme.primaryFixedDim,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.today),

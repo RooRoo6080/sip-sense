@@ -5,6 +5,7 @@ import 'package:waterbottle/data/display_data.dart';
 import 'package:waterbottle/data/db.dart';
 import 'package:waterbottle/data/logs.dart';
 import 'dart:core';
+import 'package:google_fonts/google_fonts.dart';
 
 class MyDayPage extends StatefulWidget {
   const MyDayPage({Key? key}) : super(key: key);
@@ -96,7 +97,10 @@ class _MyDayPageState extends State<MyDayPage> {
       builder: (context) {
         double newValue = 0.0;
         return AlertDialog(
-          title: const Text('Log water consumption'),
+          title: Text(
+            style: GoogleFonts.montserrat(fontSize: 20),
+            'Log water consumption',
+          ),
           content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
               return Column(
@@ -197,6 +201,7 @@ class _MyDayPageState extends State<MyDayPage> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceAround,
                                   children: [
+                                    const SizedBox(width: 40),
                                     Stack(
                                       alignment: Alignment.center,
                                       children: [
@@ -215,7 +220,7 @@ class _MyDayPageState extends State<MyDayPage> {
                                                 CircularProgressIndicator(
                                               value: value,
                                               strokeCap: StrokeCap.round,
-                                              strokeWidth: 25,
+                                              strokeWidth: 30,
                                             ),
                                           ),
                                         ),
@@ -223,24 +228,23 @@ class _MyDayPageState extends State<MyDayPage> {
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
+                                            const SizedBox(width: 15),
                                             Column(
                                               children: [
                                                 Countup(
                                                   begin: 0.0,
                                                   end: consumedToday,
                                                   curve: Curves.easeInOut,
-                                                  style: TextStyle(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .onSurface,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 40,
+                                                  style: GoogleFonts.montserrat(
+                                                    fontWeight: FontWeight.w900,
+                                                    fontSize: 80,
                                                   ),
                                                   duration: const Duration(
                                                       milliseconds: 1000),
                                                 ),
                                                 SizedBox(
-                                                  width: 40,
+                                                  width: 70,
+                                                  height: 0,
                                                   child: Divider(
                                                     thickness: 1,
                                                     color: Theme.of(context)
@@ -249,20 +253,29 @@ class _MyDayPageState extends State<MyDayPage> {
                                                   ),
                                                 ),
                                                 Text(
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 40,
+                                                  style: GoogleFonts.montserrat(
+                                                    fontWeight: FontWeight.w900,
+                                                    fontSize: 80,
                                                   ),
-                                                  consumeGoal.toString(),
+                                                  consumeGoal
+                                                      .toStringAsFixed(0),
                                                 ),
                                               ],
                                             ),
-                                            const SizedBox(width: 10),
+                                            const SizedBox(width: 1),
                                             const Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                Text('oz\nconsumed'),
+                                                RotatedBox(
+                                                  quarterTurns: 1,
+                                                  child: Text(
+                                                    style: TextStyle(
+                                                      fontSize: 18,
+                                                    ),
+                                                    'ounces',
+                                                  ),
+                                                ),
                                                 SizedBox(height: 5),
                                               ],
                                             ),
@@ -272,35 +285,28 @@ class _MyDayPageState extends State<MyDayPage> {
                                     ),
                                     Column(
                                       children: [
-                                        // SizedBox(
-                                        //   width: 40,
-                                        //   height: 40,
-                                        //   child: FloatingActionButton(
-                                        //     onPressed: () {
-                                        //       setState(() {
-                                        //         _onBottleFilled(0);
-                                        //       });
-                                        //     },
-                                        //     child: const Icon(
-                                        //       Icons.water_drop,
-                                        //       size: 20,
-                                        //     ),
-                                        //   ),
-                                        // ),
-                                        const SizedBox(height: 170),
                                         SizedBox(
                                           width: 40,
                                           height: 40,
-                                          child: FloatingActionButton(
+                                          child: TextButton(
+                                            onPressed: () {
+                                              setState(() {});
+                                            },
+                                            child: const Icon(
+                                              Icons.wb_incandescent,
+                                              size: 25,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 180),
+                                        SizedBox(
+                                          width: 40,
+                                          height: 40,
+                                          child: TextButton(
                                             onPressed: _showAddLogDialog,
-                                            // onPressed: () {
-                                            //   setState(() {
-                                            //     _onWaterDrunk(2);
-                                            //   });
-                                            // },
                                             child: const Icon(
                                               Icons.add,
-                                              size: 20,
+                                              size: 25,
                                             ),
                                           ),
                                         ),
@@ -327,16 +333,19 @@ class _MyDayPageState extends State<MyDayPage> {
                                       LinearProgressIndicator(
                                     value: value,
                                     minHeight: 25,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primaryFixed,
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 15),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   SizedBox(
                                     height: 30,
-                                    child: FloatingActionButton(
+                                    child: OutlinedButton(
                                       onPressed: () {
                                         setState(() {
                                           _onBottleFilled(false);
@@ -360,7 +369,7 @@ class _MyDayPageState extends State<MyDayPage> {
                                   const SizedBox(width: 10),
                                   SizedBox(
                                     height: 30,
-                                    child: FloatingActionButton(
+                                    child: OutlinedButton(
                                       onPressed: () {
                                         setState(() {
                                           _onBottleFilled(true);
@@ -417,6 +426,7 @@ class _MyDayPageState extends State<MyDayPage> {
                             ],
                           ),
                           const SizedBox(height: 20),
+                          const Divider(thickness: 1),
                         ],
                       ),
                     );
@@ -425,7 +435,6 @@ class _MyDayPageState extends State<MyDayPage> {
                   }
                 },
               ),
-              const Divider(),
               FutureBuilder<dynamic>(
                 future: _chartData,
                 builder: (context, snapshot) {
