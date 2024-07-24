@@ -115,6 +115,15 @@ class _TrackingPageState extends State<TrackingPage> {
                           xValueMapper: (ChartData data, _) => data.x,
                           yValueMapper: (ChartData data, _) => data.y,
                           name: "You",
+                          dataLabelSettings: DataLabelSettings(
+                            isVisible: true,
+                            showZeroValue: false,
+                            overflowMode: OverflowMode.hide,
+                            textStyle: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 10,
+                            ),
+                          ),
                         ),
                       ],
                     );

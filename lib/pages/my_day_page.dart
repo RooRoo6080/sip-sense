@@ -46,15 +46,12 @@ class _MyDayPageState extends State<MyDayPage> {
 
   Future<void> _loadConsumptionData() async {
     final data = await ConsumptionData.loadConsumptionData();
-    // await Future.delayed(const Duration(seconds: 2));
     setState(() {
       _consumptionData = data ??
           ConsumptionData(
             waterInBottle: 0,
             bottleCapacity: 24,
-            consumedToday: 0,
             consumeGoal: 35,
-            lastUpdated: DateTime.now().toIso8601String(),
           );
       rebuildAllChildren(context);
     });
@@ -68,19 +65,13 @@ class _MyDayPageState extends State<MyDayPage> {
     });
   }
 
-  void _onBottleFilled(double amount) {
+  void _onBottleFilled(bool amount) {
     setState(() {
-      _consumptionData.waterInBottle = _consumptionData.bottleCapacity;
+      _consumptionData.waterInBottle =
+          amount ? _consumptionData.bottleCapacity : 0;
     });
     _updateConsumptionData();
-  }
-
-  void _onWaterDrunk(double amount) {
-    setState(() {
-      _consumptionData.consumedToday += amount;
-      _consumptionData.waterInBottle -= amount;
-    });
-    _updateConsumptionData();
+    _refreshData;
   }
 
   void rebuildAllChildren(BuildContext context) {
@@ -92,13 +83,20 @@ class _MyDayPageState extends State<MyDayPage> {
     (context as Element).visitChildren(rebuild);
   }
 
+  Future<void> _addLogEntry(double consumed) async {
+    final logs = await Logs.loadLogs() ?? Logs(entries: []);
+    final newEntry = LogEntry(DateTime.now(), consumed);
+    logs.entries.add(newEntry);
+    await Logs.saveLogs(logs);
+  }
+
   void _showAddLogDialog() {
     showDialog(
       context: context,
       builder: (context) {
         double newValue = 0.0;
         return AlertDialog(
-          title: const Text('Add Log Entry'),
+          title: const Text('Log water consumption'),
           content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
               return Column(
@@ -107,7 +105,7 @@ class _MyDayPageState extends State<MyDayPage> {
                   Slider(
                     value: newValue,
                     min: 0,
-                    max: 24,
+                    max: _consumptionData.bottleCapacity,
                     divisions: 48,
                     label: newValue.toStringAsFixed(1),
                     onChanged: (double value) {
@@ -130,6 +128,11 @@ class _MyDayPageState extends State<MyDayPage> {
             ),
             TextButton(
               onPressed: () {
+                _addLogEntry(double.parse(newValue.toStringAsFixed(1)));
+                setState(() {
+                  _consumptionData.waterInBottle -= newValue;
+                });
+                _updateConsumptionData();
                 Navigator.of(context).pop();
               },
               child: const Text('Add'),
@@ -159,8 +162,18 @@ class _MyDayPageState extends State<MyDayPage> {
                   } else if (!snapshot.hasData) {
                     return const Center(child: Text('No data available'));
                   } else if (snapshot.connectionState == ConnectionState.done) {
+                    List<String> daysOfWeek = [
+                      'monday',
+                      'tuesday',
+                      'wednesday',
+                      'thursday',
+                      'friday',
+                      'saturday',
+                      'sunday'
+                    ];
+                    String dayOfWeek = daysOfWeek[DateTime.now().weekday - 1];
                     final displayData = snapshot.data!;
-                    final consumedToday = displayData["consumedToday"];
+                    final consumedToday = displayData["${dayOfWeek}Consumed"];
                     final consumeGoal = displayData["consumeGoal"];
                     final waterInBottle = displayData["waterInBottle"];
                     final bottleCapacity = displayData["bottleCapacity"];
@@ -258,37 +271,32 @@ class _MyDayPageState extends State<MyDayPage> {
                                     ),
                                     Column(
                                       children: [
-                                        SizedBox(
-                                          width: 40,
-                                          height: 40,
-                                          child: FloatingActionButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                _onBottleFilled(0);
-                                                // rebuildAllChildren(context);
-                                                // Navigator.popAndPushNamed(
-                                                //     context, '/screenname');
-                                              });
-                                            },
-                                            child: const Icon(
-                                              Icons.water_drop,
-                                              size: 20,
-                                            ),
-                                          ),
-                                        ),
+                                        // SizedBox(
+                                        //   width: 40,
+                                        //   height: 40,
+                                        //   child: FloatingActionButton(
+                                        //     onPressed: () {
+                                        //       setState(() {
+                                        //         _onBottleFilled(0);
+                                        //       });
+                                        //     },
+                                        //     child: const Icon(
+                                        //       Icons.water_drop,
+                                        //       size: 20,
+                                        //     ),
+                                        //   ),
+                                        // ),
                                         const SizedBox(height: 170),
                                         SizedBox(
                                           width: 40,
                                           height: 40,
                                           child: FloatingActionButton(
-                                            onPressed: () {
-                                              setState(() {
-                                                _onWaterDrunk(2);
-                                                // rebuildAllChildren(context);
-                                                // Navigator.popAndPushNamed(
-                                                //     context, '/screenname');
-                                              });
-                                            },
+                                            onPressed: _showAddLogDialog,
+                                            // onPressed: () {
+                                            //   setState(() {
+                                            //     _onWaterDrunk(2);
+                                            //   });
+                                            // },
                                             child: const Icon(
                                               Icons.add,
                                               size: 20,
@@ -321,12 +329,47 @@ class _MyDayPageState extends State<MyDayPage> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 5),
-                              Text(
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                '$waterInBottle oz left in bottle',
+                              const SizedBox(height: 10),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    height: 30,
+                                    child: FloatingActionButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _onBottleFilled(false);
+                                        });
+                                      },
+                                      child: const Icon(
+                                        Icons.water_drop_outlined,
+                                        size: 15,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    '$waterInBottle oz left in bottle',
+                                  ),
+                                  const SizedBox(width: 10),
+                                  SizedBox(
+                                    height: 30,
+                                    child: FloatingActionButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _onBottleFilled(true);
+                                        });
+                                      },
+                                      child: const Icon(
+                                        Icons.water_drop,
+                                        size: 15,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

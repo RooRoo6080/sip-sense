@@ -29,8 +29,6 @@ class _LogsPageState extends State<LogsPage> {
       TextEditingController();
   final TextEditingController _bottleCapacityController =
       TextEditingController();
-  final TextEditingController _consumedTodayController =
-      TextEditingController();
   final TextEditingController _consumeGoalController = TextEditingController();
 
   @override
@@ -54,9 +52,7 @@ class _LogsPageState extends State<LogsPage> {
     final consumptionData = ConsumptionData(
       waterInBottle: double.parse(_waterInBottleController.text),
       bottleCapacity: double.parse(_bottleCapacityController.text),
-      consumedToday: double.parse(_consumedTodayController.text),
       consumeGoal: double.parse(_consumeGoalController.text),
-      lastUpdated: DateTime.now().toIso8601String(),
     );
     await ConsumptionData.saveConsumptionData(consumptionData);
   }
@@ -174,7 +170,6 @@ class _LogsPageState extends State<LogsPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Existing FutureBuilder for Logs
             FutureBuilder<Logs?>(
               future: _logsFormattedFuture,
               builder: (context, snapshot) {
@@ -267,8 +262,6 @@ class _LogsPageState extends State<LogsPage> {
                       consumptionData.waterInBottle.toString();
                   _bottleCapacityController.text =
                       consumptionData.bottleCapacity.toString();
-                  _consumedTodayController.text =
-                      consumptionData.consumedToday.toString();
                   _consumeGoalController.text =
                       consumptionData.consumeGoal.toString();
                   return Padding(
@@ -285,12 +278,6 @@ class _LogsPageState extends State<LogsPage> {
                           controller: _bottleCapacityController,
                           decoration: const InputDecoration(
                               labelText: 'Bottle Capacity'),
-                          keyboardType: TextInputType.number,
-                        ),
-                        TextField(
-                          controller: _consumedTodayController,
-                          decoration: const InputDecoration(
-                              labelText: 'Consumed Today'),
                           keyboardType: TextInputType.number,
                         ),
                         TextField(
@@ -313,7 +300,6 @@ class _LogsPageState extends State<LogsPage> {
                 }
               },
             ),
-            // Existing FutureBuilder for Logs JSON (Raw and Formatted)
             FutureBuilder<String>(
               future: _logsFuture,
               builder: (context, snapshot) {

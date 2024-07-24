@@ -51,25 +51,19 @@ class ProfileData {
 class ConsumptionData {
   double waterInBottle;
   double bottleCapacity;
-  double consumedToday;
   double consumeGoal;
-  String lastUpdated;
 
   ConsumptionData({
     required this.waterInBottle,
     required this.bottleCapacity,
-    required this.consumedToday,
     required this.consumeGoal,
-    required this.lastUpdated,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'waterInBottle': waterInBottle,
       'bottleCapacity': bottleCapacity,
-      'consumedToday': consumedToday,
       'consumeGoal': consumeGoal,
-      'lastUpdated': lastUpdated,
     };
   }
 
@@ -77,9 +71,7 @@ class ConsumptionData {
     return ConsumptionData(
       waterInBottle: json['waterInBottle'],
       bottleCapacity: json['bottleCapacity'],
-      consumedToday: json['consumedToday'],
       consumeGoal: json['consumeGoal'],
-      lastUpdated: json['lastUpdated'],
     );
   }
 
@@ -109,9 +101,7 @@ class ConsumptionData {
       final defaultData = ConsumptionData(
         waterInBottle: 24,
         bottleCapacity: 24,
-        consumedToday: 0,
         consumeGoal: 35,
-        lastUpdated: DateTime.now().toIso8601String(),
       );
       await file.writeAsString(jsonEncode(defaultData.toJson()));
       final jsonData = jsonDecode(await file.readAsString());
@@ -121,19 +111,9 @@ class ConsumptionData {
 
   static Future<void> updateConsumptionData(double consumed) async {
     final data = await loadConsumptionData();
-    var test = DateTime.parse(data!.lastUpdated);
-    if (data != null) {
-      final now = DateTime.now();
-      if (now.day != test.day ||
-          now.month != test.month ||
-          now.year != test.year) {
-        data.consumedToday = 0;
-      }
-      data.consumedToday += consumed;
-      data.waterInBottle -= consumed;
-      data.lastUpdated = now as String;
-      await saveConsumptionData(data);
-    }
+    
+    data!.waterInBottle -= consumed;
+    await saveConsumptionData(data);
   }
 
   static Future<void> initializeConsumptionData() async {
@@ -145,9 +125,7 @@ class ConsumptionData {
       final defaultData = ConsumptionData(
         waterInBottle: 24,
         bottleCapacity: 24,
-        consumedToday: 0,
         consumeGoal: 35,
-        lastUpdated: DateTime.now().toIso8601String(),
       );
       await file.writeAsString(jsonEncode(defaultData.toJson()));
     }

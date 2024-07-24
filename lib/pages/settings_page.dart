@@ -27,9 +27,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ConsumptionData(
             waterInBottle: _consumptionData.waterInBottle,
             bottleCapacity: _consumptionData.bottleCapacity,
-            consumedToday: 0,
             consumeGoal: 35,
-            lastUpdated: DateTime.now().toIso8601String(),
           );
     });
   }

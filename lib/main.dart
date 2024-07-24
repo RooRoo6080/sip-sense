@@ -5,7 +5,7 @@ import 'pages/connection_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/my_day_page.dart';
 import 'pages/tracking_page.dart';
-import 'pages/recommendations_page.dart';
+// import 'pages/recommendations_page.dart';
 import 'data/db.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
@@ -21,9 +21,7 @@ Future<void> initializeConsumptionData() async {
     final defaultData = ConsumptionData(
       waterInBottle: 24,
       bottleCapacity: 24,
-      consumedToday: 0,
       consumeGoal: 35,
-      lastUpdated: DateTime.now().toIso8601String(),
     );
     await file.writeAsString(jsonEncode(defaultData.toJson()));
   }

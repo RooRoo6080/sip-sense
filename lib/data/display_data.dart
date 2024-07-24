@@ -9,7 +9,6 @@ class DisplayData {
     final Map<String, dynamic> data = {};
 
     if (consumptionData != null) {
-      data['consumedToday'] = consumptionData.consumedToday;
       data['consumeGoal'] = consumptionData.consumeGoal;
       data['waterInBottle'] = consumptionData.waterInBottle;
       data['bottleCapacity'] = consumptionData.bottleCapacity;
