@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:waterbottle/data/db.dart';
+import 'package:waterbottle/data/theme_data.dart';
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -115,6 +117,25 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                 ),
               ],
+            ),
+            const Divider(),
+            const SizedBox(height: 10),
+            Consumer<ThemeNotifier>(
+              builder: (context, themeNotifier, child) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Light  "),
+                    Switch(
+                      value: themeNotifier.isDarkTheme,
+                      onChanged: (value) {
+                        themeNotifier.toggleTheme();
+                      },
+                    ),
+                    const Text("  Dark"),
+                  ],
+                );
+              },
             ),
           ],
         ),

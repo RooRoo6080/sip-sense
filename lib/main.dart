@@ -6,11 +6,13 @@ import 'pages/settings_page.dart';
 import 'pages/my_day_page.dart';
 import 'pages/tracking_page.dart';
 // import 'pages/recommendations_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'data/db.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:core';
+import 'package:provider/provider.dart';
 
 Future<void> initializeConsumptionData() async {
   final directory = await getApplicationDocumentsDirectory();
@@ -30,7 +32,14 @@ Future<void> initializeConsumptionData() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeConsumptionData();
-  runApp(const WaterTrackerApp());
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeNotifier(isDarkTheme),
+      child: const WaterTrackerApp(),
+    ),
+  );
 }
 
 class WaterTrackerApp extends StatefulWidget {
@@ -42,14 +51,31 @@ class WaterTrackerApp extends StatefulWidget {
 }
 
 class _WaterTrackerAppState extends State<WaterTrackerApp> {
+  // ignore: unused_field
+  bool _isDarkTheme = true;
+  Future<void> _loadTheme() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTheme();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Water Tracker',
-      debugShowCheckedModeBanner: false,
-      theme: Styles.themeData(true, Colors.blue),
-      home: const HomePage(),
-    );
+    return Consumer<ThemeNotifier>(builder: (context, themeNotifier, child) {
+      return MaterialApp(
+        title: 'Water Tracker',
+        debugShowCheckedModeBanner: false,
+        theme: themeNotifier.getThemeData(),
+        home: const HomePage(),
+      );
+    });
   }
 }
 
