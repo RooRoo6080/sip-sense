@@ -1,135 +1,176 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:waterbottle/bluetooth/communication_handler.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:simple_logger/simple_logger.dart';
+import 'package:collection/collection.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class ConnectionPage extends StatefulWidget {
-  const ConnectionPage({super.key});
+  const ConnectionPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
-  _ConnectionPageState createState() => _ConnectionPageState();
+  State<ConnectionPage> createState() => _ConnectionPageState();
 }
 
 class _ConnectionPageState extends State<ConnectionPage> {
-  FlutterBlue flutterBlue = FlutterBlue.instance;
-  BluetoothDevice? _connectedDevice;
-  List<BluetoothService> _services = [];
-  List<ScanResult> _scanResults = [];
+  SimpleLogger logger = SimpleLogger();
+  CommunicationHandler? communicationHandler;
+  bool isScanStarted = false;
+  bool isConnected = false;
+  List<DiscoveredDevice> discoveredDevices =
+      List<DiscoveredDevice>.empty(growable: true);
+  String connectedDeviceDetails = "";
 
-  @override
-  void initState() {
-    super.initState();
-    startScan();
-  }
-
-  void startScan() {
-    flutterBlue.startScan(timeout: const Duration(seconds: 4));
-
-    flutterBlue.scanResults.listen((results) {
-      setState(() {
-        _scanResults = results;
-      });
-    });
-  }
-
-  void connectToDevice(BluetoothDevice device) async {
-    await device.connect();
-    setState(() {
-      _connectedDevice = device;
-    });
-    discoverServices();
-  }
-
-  void discoverServices() async {
-    if (_connectedDevice != null) {
-      List<BluetoothService> services = await _connectedDevice!.discoverServices();
-      setState(() {
-        _services = services;
-      });
-    }
-  }
-
-  void disconnectFromDevice() {
-    _connectedDevice?.disconnect();
-    setState(() {
-      _connectedDevice = null;
-      _services = [];
-    });
-  }
-
-  void showDeviceSelectionDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select a Device'),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: ListView.builder(
-            itemCount: _scanResults.length,
-            itemBuilder: (context, index) {
-              ScanResult result = _scanResults[index];
-              return ListTile(
-                title: Text(result.device.name.isNotEmpty ? result.device.name : 'Unknown Device'),
-                subtitle: Text(result.device.id.toString()),
-                onTap: () {
-                  Navigator.pop(context);
-                  connectToDevice(result.device);
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-    );
-  }
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('ESP32 Connection Page'),
-      ),
-      body: _connectedDevice == null ? buildScanningView() : buildDeviceView(),
+        appBar: AppBar(
+          title: const Text("Connect"),
+        ),
+        body: Column(
+          children: [
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  isScanStarted ? stopScan() : startScan();
+                },
+                child: Text(isScanStarted ? "Stop Scan" : "Start Scan"),
+              ),
+            ),
+            SizedBox(
+              height: 400,
+              child: ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: discoveredDevices.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return Padding(
+                      padding: const EdgeInsets.all(5),
+                      child: SizedBox(
+                        height: 40,
+                        child: Center(
+                            child: OutlinedButton(
+                          child: Text(discoveredDevices[index].name),
+                          onPressed: () {
+                            DiscoveredDevice selectedDevice =
+                                discoveredDevices[index];
+                            connectToDevice(selectedDevice);
+                          },
+                        )),
+                      ),
+                    );
+                  }),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(connectedDeviceDetails),
+            )
+          ],
+        ));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    checkPermissions();
+    initNotifications();
+    communicationHandler =
+        CommunicationHandler(onMessageReceived: showNotification);
+    if (communicationHandler?.isConnected ?? false) {
+      setState(() {
+        isConnected = true;
+        connectedDeviceDetails =
+            "Connected Device Details\n\n${communicationHandler?.getConnectedDevice()}";
+      });
+    }
+  }
+
+  void checkPermissions() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.bluetooth,
+      Permission.bluetoothConnect,
+      Permission.bluetoothScan,
+      Permission.location,
+      Permission.bluetoothAdvertise,
+    ].request();
+
+    logger.info("PermissionStatus -- $statuses");
+  }
+
+  void initNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future<void> showNotification(String message) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'your_channel_id',
+      'your_channel_name',
+      channelDescription: 'your_channel_description',
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: false,
+    );
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'New BLE Message',
+      message,
+      platformChannelSpecifics,
+      payload: 'item x',
     );
   }
 
-  Widget buildScanningView() {
-    return Center(
-      child: ElevatedButton(
-        onPressed: showDeviceSelectionDialog,
-        child: const Text('Select Device'),
-      ),
-    );
+  void startScan() {
+    communicationHandler ??=
+        CommunicationHandler(onMessageReceived: showNotification);
+    communicationHandler?.startScan((scanDevice) {
+      logger.info("Scan device: ${scanDevice.name}");
+      if (discoveredDevices
+              .firstWhereOrNull((val) => val.id == scanDevice.id) ==
+          null) {
+        logger.info("Added new device to list: ${scanDevice.name}");
+        setState(() {
+          discoveredDevices.add(scanDevice);
+        });
+      }
+    });
+
+    setState(() {
+      isScanStarted = true;
+      discoveredDevices.clear();
+    });
   }
 
-  Widget buildDeviceView() {
-    return Column(
-      children: [
-        ListTile(
-          title: Text('Device: ${_connectedDevice?.name}'),
-          subtitle: const Text('Status: Connected'),
-          trailing: ElevatedButton(
-            onPressed: disconnectFromDevice,
-            child: const Text('Disconnect'),
-          ),
-        ),
-        Expanded(
-          child: ListView(
-            children: _services.map((service) {
-              return ListTile(
-                title: Text('Service: ${service.uuid}'),
-                subtitle: Text('Characteristics: ${service.characteristics.length}'),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
+  Future<void> stopScan() async {
+    await communicationHandler?.stopScan();
+    setState(() {
+      isScanStarted = false;
+    });
+  }
+
+  Future<void> connectToDevice(DiscoveredDevice selectedDevice) async {
+    await stopScan();
+    communicationHandler?.connectToDevice(selectedDevice, (isConnected) {
+      this.isConnected = isConnected;
+      if (isConnected) {
+        connectedDeviceDetails = "Connected Device Details\n\n$selectedDevice";
+      } else {
+        connectedDeviceDetails = "";
+      }
+      setState(() {
+        connectedDeviceDetails;
+      });
+    });
   }
 }

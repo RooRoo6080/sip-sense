@@ -451,7 +451,7 @@ class _MyDayPageState extends State<MyDayPage> {
                       primaryXAxis: const CategoryAxis(),
                       legend: const Legend(isVisible: true),
                       series: <CartesianSeries>[
-                        AreaSeries<ChartData, String>(
+                        SplineAreaSeries<ChartData, String>(
                           color: Theme.of(context).colorScheme.onPrimary,
                           opacity: 1,
                           dataSource: chartdata,
@@ -459,7 +459,7 @@ class _MyDayPageState extends State<MyDayPage> {
                           yValueMapper: (ChartData data, _) => data.y2,
                           name: "Target",
                         ),
-                        AreaSeries<ChartData, String>(
+                        SplineAreaSeries<ChartData, String>(
                           color: Theme.of(context).colorScheme.primary,
                           opacity: 0.7,
                           dataSource: chartdata,
