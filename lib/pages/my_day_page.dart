@@ -59,11 +59,9 @@ class _MyDayPageState extends State<MyDayPage> {
   }
 
   Future<void> _updateConsumptionData() async {
-    setState(() async {
-      await ConsumptionData.saveConsumptionData(_consumptionData);
-      _loadConsumptionData();
-      _refreshData;
-    });
+    await ConsumptionData.saveConsumptionData(_consumptionData);
+    _loadConsumptionData();
+    _refreshData;
   }
 
   void _onBottleFilled(bool amount) {
@@ -364,7 +362,7 @@ class _MyDayPageState extends State<MyDayPage> {
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
-                                    '$waterInBottle oz left in bottle',
+                                    '${waterInBottle.toStringAsFixed(1)} oz left in bottle',
                                   ),
                                   const SizedBox(width: 10),
                                   SizedBox(

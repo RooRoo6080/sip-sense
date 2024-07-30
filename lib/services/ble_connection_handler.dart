@@ -1,7 +1,8 @@
 import 'dart:async';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:simple_logger/simple_logger.dart';
+import 'package:waterbottle/services/notification_service.dart';
 
 class BleConnectionHandler {
   SimpleLogger logger = SimpleLogger();
@@ -29,12 +30,19 @@ class BleConnectionHandler {
   }
 
   void connectToDevice(DiscoveredDevice discoveredDevice, Function(bool) connectionStatus) async {
-    connection = flutterReactiveBle.connectToDevice(id: discoveredDevice.id).listen((connectionState) {
+    final prefs = await SharedPreferences.getInstance();
+    connection = flutterReactiveBle.connectToDevice(id: discoveredDevice.id).listen((connectionState) async {
       logger.info("ConnectionState for device ${discoveredDevice.name} : ${connectionState.connectionState}");
       if (connectionState.connectionState == DeviceConnectionState.connected) {
+        logger.info("-------- ESP32 Connected --------");
+        NotificationService().removeNotification(1);
+        await prefs.setBool('connected', true);
         connectedDevice = discoveredDevice;
         connectionStatus(true);
       } else if (connectionState.connectionState == DeviceConnectionState.disconnected) {
+        logger.info("-------- ESP32 Disconnected --------");
+        NotificationService().showNotification(1, 'Device disconnected', 'Your water bottle is not connected');
+        await prefs.setBool('connected', false);
         connectedDevice = null;
         connectionStatus(false);
       }

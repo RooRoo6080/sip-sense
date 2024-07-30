@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
-import 'package:waterbottle/bluetooth/communication_handler.dart';
+import 'package:waterbottle/services/communication_handler.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ConnectionPage extends StatefulWidget {
   const ConnectionPage({Key? key}) : super(key: key);
@@ -34,42 +35,59 @@ class _ConnectionPageState extends State<ConnectionPage> {
         body: Column(
           children: [
             Center(
-              child: TextButton(
-                onPressed: () {
-                  isScanStarted ? stopScan() : startScan();
-                },
-                child: Text(isScanStarted ? "Stop Scan" : "Start Scan"),
-              ),
+              child: !isConnected
+                  ? TextButton(
+                      onPressed: () {
+                        isScanStarted ? stopScan() : startScan();
+                      },
+                      child: Text(isScanStarted ? "Stop Scan" : "Start Scan"),
+                    )
+                  : const SizedBox(),
             ),
-            SizedBox(
-              height: 400,
-              child: ListView.builder(
-                  padding: const EdgeInsets.all(10),
-                  itemCount: discoveredDevices.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(5),
-                      child: SizedBox(
-                        height: 40,
-                        child: Center(
-                            child: OutlinedButton(
-                          child: Text(discoveredDevices[index].name),
-                          onPressed: () {
-                            DiscoveredDevice selectedDevice =
-                                discoveredDevices[index];
-                            connectToDevice(selectedDevice);
-                          },
-                        )),
-                      ),
-                    );
-                  }),
-            ),
+            // SizedBox(
+            //   height: 400,
+            //   child: ListView.builder(
+            //       padding: const EdgeInsets.all(10),
+            //       itemCount: discoveredDevices.length,
+            //       itemBuilder: (BuildContext context, int index) {
+            //         return Padding(
+            //           padding: const EdgeInsets.all(5),
+            //           child: SizedBox(
+            //             height: 40,
+            //             child: Center(
+            //                 child: OutlinedButton(
+            //               child: Text(discoveredDevices[index].name),
+            //               onPressed: () {
+            //                 DiscoveredDevice selectedDevice =
+            //                     discoveredDevices[index];
+            //                 connectToDevice(selectedDevice);
+            //               },
+            //             )),
+            //           ),
+            //         );
+            //       }),
+            // ),
             Padding(
               padding: const EdgeInsets.all(20),
               child: Text(connectedDeviceDetails),
             )
           ],
         ));
+  }
+
+  Future<void> connected() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('connected') ?? false) {
+      setState(() {
+        connectedDeviceDetails = "Connected to your device";
+        isConnected = false;
+      });
+    } else {
+      setState(() {
+        connectedDeviceDetails = "Disconnected from your device";
+        isConnected = false;
+      });
+    }
   }
 
   @override
@@ -79,13 +97,7 @@ class _ConnectionPageState extends State<ConnectionPage> {
     initNotifications();
     communicationHandler =
         CommunicationHandler(onMessageReceived: showNotification);
-    if (communicationHandler?.isConnected ?? false) {
-      setState(() {
-        isConnected = true;
-        connectedDeviceDetails =
-            "Connected Device Details\n\n${communicationHandler?.getConnectedDevice()}";
-      });
-    }
+    connected();
   }
 
   void checkPermissions() async {
@@ -140,6 +152,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
               .firstWhereOrNull((val) => val.id == scanDevice.id) ==
           null) {
         logger.info("Added new device to list: ${scanDevice.name}");
+        if (scanDevice.name == "ESP32_BLE") {
+          connectToDevice(scanDevice);
+        }
         setState(() {
           discoveredDevices.add(scanDevice);
         });
@@ -164,9 +179,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
     communicationHandler?.connectToDevice(selectedDevice, (isConnected) {
       this.isConnected = isConnected;
       if (isConnected) {
-        connectedDeviceDetails = "Connected Device Details\n\n$selectedDevice";
+        connectedDeviceDetails = "Connected to your device";
       } else {
-        connectedDeviceDetails = "";
+        connectedDeviceDetails = "Not connected";
       }
       setState(() {
         connectedDeviceDetails;

@@ -45,15 +45,10 @@ class Logs {
     }
   }
 
-  // New method to add a log entry
-  static Future<void> addLogEntry(LogEntry entry) async {
-    final logs = await loadLogs() ?? Logs(entries: []);
-    logs.entries.add(entry);
-    await saveLogs(logs);
-
+  static Future<void> waterDrunk(double value) async {
     final consumptionData = await ConsumptionData.loadConsumptionData();
     if (consumptionData != null) {
-      await ConsumptionData.updateConsumptionData(entry.consumed);
+      await ConsumptionData.updateConsumptionData(value);
     }
   }
 }
