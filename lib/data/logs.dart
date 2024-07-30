@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:waterbottle/data/db.dart';
+import 'package:waterbottle/services/notification_service.dart';
 
 class Logs {
   List<LogEntry> entries;
@@ -29,6 +30,7 @@ class Logs {
 
   static Future<void> saveLogs(Logs logs) async {
     final file = File(await _filePath);
+    NotificationService().removeNotification(2);
     await file.writeAsString(jsonEncode(logs.toJson()));
   }
 

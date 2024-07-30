@@ -6,6 +6,7 @@ import 'pages/settings_page.dart';
 import 'pages/my_day_page.dart';
 import 'pages/tracking_page.dart';
 import 'services/notification_service.dart';
+import 'services/background_timer.dart';
 // import 'pages/recommendations_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'data/db.dart';
@@ -34,6 +35,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService().init();
   await initializeConsumptionData();
+  initBackgroundFetch();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   bool isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
   runApp(

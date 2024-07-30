@@ -6,16 +6,19 @@ import 'dart:core';
 class ProfileData {
   double weight;
   int manualAdjustment;
+  double drinkEvery;
 
   ProfileData({
     this.weight = 70.0,
     this.manualAdjustment = 0,
+    this.drinkEvery = 1,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'weight': weight,
       'manualAdjustment': manualAdjustment,
+      'drinkEvery': drinkEvery,
     };
   }
 
@@ -23,6 +26,7 @@ class ProfileData {
     return ProfileData(
       weight: json['weight'].toDouble(),
       manualAdjustment: json['manualAdjustment'],
+      drinkEvery: json['drinkEvery'].toDouble(),
     );
   }
 

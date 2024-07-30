@@ -118,6 +118,27 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
+            const SizedBox(height: 20),
+            const Text('Remind me to drink if I haven\'t for...'),
+            Slider(
+              value: profileData.drinkEvery,
+              min: 0.25,
+              max: 6.0,
+              divisions: 23,
+              label: profileData.drinkEvery.toStringAsFixed(2),
+              onChanged: (double value) {
+                setState(() {
+                  profileData.drinkEvery = value;
+                  _updateProfileData();
+                });
+              },
+            ),
+            Text(
+              '${profileData.drinkEvery.toStringAsFixed(2)} hours',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 20),
             const Divider(),
             const SizedBox(height: 10),
             Consumer<ThemeNotifier>(
