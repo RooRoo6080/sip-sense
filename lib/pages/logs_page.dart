@@ -55,68 +55,11 @@ class _LogsPageState extends State<LogsPage> {
     }
   }
 
-  Future<void> _addLogEntry(double consumed) async {
-    final logs = await Logs.loadLogs() ?? Logs(entries: []);
-    final newEntry = LogEntry(DateTime.now(), consumed);
-    logs.entries.add(newEntry);
-    await Logs.saveLogs(logs);
-    _refreshLogs();
-  }
-
   Future<void> _refreshLogs() async {
     setState(() {
       _logsFuture = _loadLogs();
       _logsFormattedFuture = Logs.loadLogs();
     });
-  }
-
-  void _showAddLogDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        double newValue = 0.0;
-        return AlertDialog(
-          title: const Text('Add Log Entry'),
-          content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Slider(
-                    value: newValue,
-                    min: 0,
-                    max: 24,
-                    divisions: 48,
-                    label: newValue.toStringAsFixed(1),
-                    onChanged: (double value) {
-                      setState(() {
-                        newValue = value;
-                      });
-                    },
-                  ),
-                  Text(newValue.toStringAsFixed(1)),
-                ],
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                _addLogEntry(double.parse(newValue.toStringAsFixed(1)));
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -221,12 +164,9 @@ class _LogsPageState extends State<LogsPage> {
                 }
               },
             ),
+            const SizedBox(height: 90),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddLogDialog,
-        child: const Icon(Icons.add),
       ),
     );
   }

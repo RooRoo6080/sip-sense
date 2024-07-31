@@ -74,6 +74,7 @@ class _TrackingPageState extends State<TrackingPage> {
                     child: DropdownButton<String>(
                       value: dropdownValue,
                       style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontFamily: GoogleFonts.montserrat().fontFamily,
                       ),
                       onChanged: (String? value) {
@@ -107,7 +108,7 @@ class _TrackingPageState extends State<TrackingPage> {
                       primaryXAxis: const CategoryAxis(),
                       legend: const Legend(isVisible: true),
                       series: <CartesianSeries>[
-                        SplineAreaSeries<ChartData, String>(
+                        AreaSeries<ChartData, String>(
                           color: Theme.of(context).colorScheme.onPrimary,
                           opacity: 1,
                           dataSource: chartData,
@@ -115,7 +116,7 @@ class _TrackingPageState extends State<TrackingPage> {
                           yValueMapper: (ChartData data, _) => data.y2,
                           name: "Target",
                         ),
-                        SplineAreaSeries<ChartData, String>(
+                        AreaSeries<ChartData, String>(
                           color: Theme.of(context).colorScheme.primary,
                           opacity: 0.7,
                           dataSource: chartData,
@@ -204,7 +205,8 @@ class _TrackingPageState extends State<TrackingPage> {
                     );
                   }
                 },
-              )
+              ),
+              const SizedBox(height: 90),
             ],
           ),
         ),

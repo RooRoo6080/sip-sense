@@ -1,4 +1,5 @@
 import 'package:background_fetch/background_fetch.dart';
+import 'package:flutter/material.dart';
 import 'package:waterbottle/data/logs.dart';
 import 'package:waterbottle/services/notification_service.dart';
 import 'package:simple_logger/simple_logger.dart';
@@ -33,32 +34,53 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
 
 Future<void> checkLogsAndTriggerFunction() async {
   final logs = await Logs.loadLogs();
-  profileData = await ProfileData.readProfileData() ??
-      ProfileData(
-        weight: 70.0,
-        manualAdjustment: 0,
-        drinkEvery: 1,
-      );
+  profileData = await ProfileData.readProfileData() ?? ProfileData();
+
   if (logs != null && logs.entries.isNotEmpty) {
     final latestLog = logs.entries.last;
     final now = DateTime.now();
-    if (now.difference(latestLog.dateTime).inHours >= profileData.drinkEvery) {
+    final currentTime = TimeOfDay(hour: now.hour, minute: now.minute);
+
+    if (now.difference(latestLog.dateTime).inHours >= profileData.drinkEvery &&
+        !_isWithinMutePeriod(
+            currentTime, profileData.muteStart, profileData.muteEnd)) {
       triggerFunction(true);
       logger.info(
           'Sending reminder; drinkEvery: ${profileData.drinkEvery} hours');
     } else {
       triggerFunction(false);
-      logger.info('remove notification');
+      logger.info('Remove notification');
     }
   } else {
     triggerFunction(true);
-    logger.info('no logs data');
+    logger.info('No logs data');
+  }
+}
+
+bool _isWithinMutePeriod(
+    TimeOfDay currentTime, TimeOfDay muteStart, TimeOfDay muteEnd) {
+  if (muteStart.hour < muteEnd.hour ||
+      (muteStart.hour == muteEnd.hour && muteStart.minute <= muteEnd.minute)) {
+    return currentTime.hour > muteStart.hour ||
+        (currentTime.hour == muteStart.hour &&
+                currentTime.minute >= muteStart.minute) &&
+            (currentTime.hour < muteEnd.hour ||
+                (currentTime.hour == muteEnd.hour &&
+                    currentTime.minute <= muteEnd.minute));
+  } else {
+    // Mute period crosses midnight
+    return (currentTime.hour > muteStart.hour ||
+            (currentTime.hour == muteStart.hour &&
+                currentTime.minute >= muteStart.minute)) ||
+        (currentTime.hour < muteEnd.hour ||
+            (currentTime.hour == muteEnd.hour &&
+                currentTime.minute <= muteEnd.minute));
   }
 }
 
 void triggerFunction(bool option) {
   option
       ? NotificationService().showNotification(2, 'Drink water',
-          'It\'s been over ${profileData.drinkEvery} hours since you last drunk water')
+          'It\'s been over ${profileData.drinkEvery} hours since you last drank water')
       : NotificationService().removeNotification(2);
 }

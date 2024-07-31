@@ -140,32 +140,57 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+      extendBody: true,
       body: _pages.elementAt(_selectedIndex),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        enableFeedback: true,
-        selectedItemColor: Theme.of(context).colorScheme.onSurface,
-        unselectedItemColor: Theme.of(context).colorScheme.primaryFixedDim,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.today),
-            label: 'My Day',
+      bottomNavigationBar: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          Container(
+            height: 53,
+            margin: const EdgeInsets.only(left: 20, right: 20),
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.all(Radius.circular(20)),
+              color: Theme.of(context).colorScheme.surfaceContainerHigh,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.insights),
-            label: 'Insights',
-          ),
-          // BottomNavigationBarItem(
-          //   icon: Icon(Icons.recommend),
-          //   label: 'Tips',
-          // ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.developer_board),
-            label: 'Logs',
+          Theme(
+            data: ThemeData(
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+            ),
+            child: BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              enableFeedback: true,
+              showSelectedLabels: false,
+              showUnselectedLabels: false,
+              selectedItemColor: Theme.of(context).colorScheme.onSurface,
+              unselectedItemColor:
+                  Theme.of(context).colorScheme.primaryFixedDim,
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.today),
+                  label: 'My Day',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.insights),
+                  label: 'Insights',
+                ),
+                // BottomNavigationBarItem(
+                //   icon: Icon(Icons.recommend),
+                //   label: 'Tips',
+                // ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.developer_board),
+                  label: 'Logs',
+                ),
+              ],
+              currentIndex: _selectedIndex,
+              onTap: _onItemTapped,
+            ),
           ),
         ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
       ),
     );
   }

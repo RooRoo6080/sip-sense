@@ -1,25 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:core';
 
 class ProfileData {
   double weight;
   int manualAdjustment;
   double drinkEvery;
-  // int sleepHour;
-  // int sleepMinute;
-  // int wakeupHour;
-  // int wakeupMinute;
+  TimeOfDay muteStart;
+  TimeOfDay muteEnd;
 
   ProfileData({
     this.weight = 70.0,
     this.manualAdjustment = 0,
     this.drinkEvery = 1,
-    // this.sleepHour = 11,
-    // this.sleepMinute = 0,
-    // this.wakeupHour = 8,
-    // this.wakeupMinute = 0,
+    this.muteStart = const TimeOfDay(hour: 23, minute: 0),
+    this.muteEnd = const TimeOfDay(hour: 8, minute: 0),
   });
 
   Map<String, dynamic> toJson() {
@@ -27,6 +23,8 @@ class ProfileData {
       'weight': weight,
       'manualAdjustment': manualAdjustment,
       'drinkEvery': drinkEvery,
+      'muteStart': _timeOfDayToJson(muteStart),
+      'muteEnd': _timeOfDayToJson(muteEnd),
     };
   }
 
@@ -35,6 +33,8 @@ class ProfileData {
       weight: json['weight'].toDouble(),
       manualAdjustment: json['manualAdjustment'],
       drinkEvery: json['drinkEvery'].toDouble(),
+      muteStart: _timeOfDayFromJson(json['muteStart']),
+      muteEnd: _timeOfDayFromJson(json['muteEnd']),
     );
   }
 
@@ -60,6 +60,8 @@ class ProfileData {
         weight: 70,
         manualAdjustment: 0,
         drinkEvery: 1,
+        muteStart: const TimeOfDay(hour: 23, minute: 0),
+        muteEnd: const TimeOfDay(hour: 8, minute: 0),
       );
       await file.writeAsString(jsonEncode(defaultData.toJson()));
       final jsonData = jsonDecode(await file.readAsString());
@@ -71,6 +73,15 @@ class ProfileData {
     final file = await _getLocalFile();
     String json = jsonEncode(toJson());
     await file.writeAsString(json);
+  }
+
+  static String _timeOfDayToJson(TimeOfDay time) {
+    return '${time.hour}:${time.minute}';
+  }
+
+  static TimeOfDay _timeOfDayFromJson(String time) {
+    final parts = time.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 }
 

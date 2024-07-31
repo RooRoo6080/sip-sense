@@ -7,6 +7,7 @@ class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SettingsPageState createState() => _SettingsPageState();
 }
 
@@ -21,13 +22,32 @@ class _SettingsPageState extends State<SettingsPage> {
     _loadData();
   }
 
+  Future<void> _selectTime(BuildContext context, bool selectStart) async {
+    final TimeOfDay initialTime = selectStart ? profileData!.muteStart : profileData!.muteEnd;
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+    );
+    if (picked != null && picked != initialTime) {
+      setState(() {
+        if (selectStart) {
+          profileData!.muteStart = picked;
+        } else {
+          profileData!.muteEnd = picked;
+        }
+        _updateProfileData();
+      });
+    }
+  }
+
   Future<void> _loadData() async {
     await Future.wait([
       _loadProfileData(),
       _loadConsumptionData(),
     ]);
     if (profileData != null) {
-      _onConsumptionDataChanged(profileData!.weight, profileData!.manualAdjustment.toDouble());
+      _onConsumptionDataChanged(
+          profileData!.weight, profileData!.manualAdjustment.toDouble());
     }
     setState(() {
       isLoading = false;
@@ -69,6 +89,8 @@ class _SettingsPageState extends State<SettingsPage> {
             weight: 70.0,
             manualAdjustment: 0,
             drinkEvery: 1,
+            muteStart: const TimeOfDay(hour: 23, minute: 0),
+            muteEnd: const TimeOfDay(hour: 8, minute: 0),
           );
     });
   }
@@ -77,7 +99,8 @@ class _SettingsPageState extends State<SettingsPage> {
     if (profileData != null) {
       setState(() {
         profileData!.writeProfileData();
-        _onConsumptionDataChanged(profileData!.weight, profileData!.manualAdjustment.toDouble());
+        _onConsumptionDataChanged(
+            profileData!.weight, profileData!.manualAdjustment.toDouble());
       });
     }
   }
@@ -162,7 +185,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     child: Column(
                       children: [
-                        const Text('Remind me to drink if I haven\'t for...'),
+                        const Text('Remind me to drink if I haven\'t for'),
                         Slider(
                           value: profileData!.drinkEvery,
                           min: 0.25,
@@ -181,6 +204,29 @@ class _SettingsPageState extends State<SettingsPage> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 18),
                         ),
+                        const SizedBox(height: 40),
+                        const Text('Mute notifications between'),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () => _selectTime(context, true),
+                              child: Text(
+                                style: const TextStyle(fontSize: 18),
+                                profileData!.muteStart.format(context),
+                              ),
+                            ),
+                            const Text('  and  '),
+                            ElevatedButton(
+                              onPressed: () => _selectTime(context, false),
+                              child: Text(
+                                style: const TextStyle(fontSize: 18),
+                                profileData!.muteEnd.format(context),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
@@ -189,7 +235,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.all(Radius.circular(20)),
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(20)),
                         color: Theme.of(context).colorScheme.surfaceContainer,
                       ),
                       child: Column(
@@ -234,14 +281,16 @@ class _SettingsPageState extends State<SettingsPage> {
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("Light  "),
+                          const Icon(Icons.light_mode),
+                          const SizedBox(width: 10),
                           Switch(
                             value: themeNotifier.isDarkTheme,
                             onChanged: (value) {
                               themeNotifier.toggleTheme();
                             },
                           ),
-                          const Text("  Dark"),
+                          const SizedBox(width: 10),
+                          const Icon(Icons.dark_mode),
                         ],
                       );
                     },
