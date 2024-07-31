@@ -15,6 +15,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:core';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 
 Future<void> initializeConsumptionData() async {
   final directory = await getApplicationDocumentsDirectory();
@@ -38,6 +39,12 @@ void main() async {
   initBackgroundFetch();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   bool isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+    ),
+  );
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeNotifier(isDarkTheme),
@@ -120,7 +127,7 @@ class _HomePageState extends State<HomePage> {
             );
           },
         ),
-        title: const Text('Water Whiz'),
+        title: const Text('SipSense'),
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle),
@@ -135,6 +142,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: _pages.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         enableFeedback: true,
         selectedItemColor: Theme.of(context).colorScheme.onSurface,
         unselectedItemColor: Theme.of(context).colorScheme.primaryFixedDim,

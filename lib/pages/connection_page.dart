@@ -6,6 +6,7 @@ import 'package:simple_logger/simple_logger.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:avatar_glow/avatar_glow.dart';
 
 class ConnectionPage extends StatefulWidget {
   const ConnectionPage({Key? key}) : super(key: key);
@@ -33,10 +34,11 @@ class _ConnectionPageState extends State<ConnectionPage> {
           title: const Text("Connect"),
         ),
         body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Center(
               child: !isConnected
-                  ? TextButton(
+                  ? OutlinedButton(
                       onPressed: () {
                         isScanStarted ? stopScan() : startScan();
                       },
@@ -70,10 +72,30 @@ class _ConnectionPageState extends State<ConnectionPage> {
             Padding(
               padding: const EdgeInsets.all(20),
               child: Text(
+                textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 20),
                 connectedDeviceDetails,
               ),
-            )
+            ),
+            const SizedBox(
+              height: 30,
+            ),
+            isConnected
+                ? AvatarGlow(
+                    glowColor: Colors.blue,
+                    child: const Material(
+                        shape: CircleBorder(),
+                        child: Icon(
+                          size: 70,
+                          color: Colors.blue,
+                          Icons.bluetooth,
+                        )),
+                  )
+                : const Icon(
+                    size: 70,
+                    color: Colors.grey,
+                    Icons.bluetooth,
+                  ),
           ],
         ));
   }
@@ -82,12 +104,12 @@ class _ConnectionPageState extends State<ConnectionPage> {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool('connected') ?? false) {
       setState(() {
-        connectedDeviceDetails = "Connected to your device";
+        connectedDeviceDetails = "Connected\nto your device";
         isConnected = false;
       });
     } else {
       setState(() {
-        connectedDeviceDetails = "Disconnected from your device";
+        connectedDeviceDetails = "Disconnected\nfrom your device";
         isConnected = false;
       });
     }
@@ -182,9 +204,9 @@ class _ConnectionPageState extends State<ConnectionPage> {
     communicationHandler?.connectToDevice(selectedDevice, (isConnected) {
       this.isConnected = isConnected;
       if (isConnected) {
-        connectedDeviceDetails = "Connected to your device";
+        connectedDeviceDetails = "Connected\nto your device";
       } else {
-        connectedDeviceDetails = "Not connected";
+        connectedDeviceDetails = "Disconnected\nfrom your device";
       }
       setState(() {
         connectedDeviceDetails;

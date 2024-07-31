@@ -65,23 +65,30 @@ class _TrackingPageState extends State<TrackingPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text("Water consumption "),
-                  DropdownButton<String>(
-                    value: dropdownValue,
-                    style: TextStyle(
-                      fontFamily: GoogleFonts.montserrat().fontFamily,
+                  Container(
+                    padding: const EdgeInsets.only(left: 15, right: 15),
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      color: Theme.of(context).colorScheme.surfaceContainer,
                     ),
-                    onChanged: (String? value) {
-                      setState(() {
-                        dropdownValue = value!;
-                        _fetchChartData(dropdownValue);
-                      });
-                    },
-                    items: list.map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
+                    child: DropdownButton<String>(
+                      value: dropdownValue,
+                      style: TextStyle(
+                        fontFamily: GoogleFonts.montserrat().fontFamily,
+                      ),
+                      onChanged: (String? value) {
+                        setState(() {
+                          dropdownValue = value!;
+                          _fetchChartData(dropdownValue);
+                        });
+                      },
+                      items: list.map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ],
               ),
@@ -141,39 +148,59 @@ class _TrackingPageState extends State<TrackingPage> {
                     return const Center(child: Text('No data available'));
                   } else {
                     final circleChartData = snapshot.data!;
-                    return SfCircularChart(
-                      title: const ChartTitle(text: 'When you drink water'),
-                      palette: <Color>[
-                        Theme.of(context).colorScheme.inversePrimary,
-                        Theme.of(context).colorScheme.inverseSurface,
-                        Theme.of(context).colorScheme.onInverseSurface,
-                        Theme.of(context).colorScheme.onPrimary,
-                        Theme.of(context).colorScheme.onSecondary,
-                        Theme.of(context).colorScheme.onSurface,
-                        Theme.of(context).colorScheme.onTertiary,
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.secondary,
-                        Theme.of(context).colorScheme.onPrimaryFixedVariant,
-                        Theme.of(context).colorScheme.tertiary,
-                      ],
-                      series: <CircularSeries<ChartData, String>>[
-                        DoughnutSeries<ChartData, String>(
-                          dataSource: circleChartData,
-                          xValueMapper: (ChartData data, _) => data.x,
-                          yValueMapper: (ChartData data, _) => data.y,
-                          dataLabelMapper: (ChartData data, _) => data.x,
-                          sortingOrder: SortingOrder.ascending,
-                          explode: true,
-                          strokeWidth: 0.5,
-                          strokeColor: Theme.of(context).colorScheme.surface,
-                          dataLabelSettings: const DataLabelSettings(
-                            showZeroValue: false,
-                            isVisible: true,
-                            labelPosition: ChartDataLabelPosition.outside,
-                            textStyle: TextStyle(fontSize: 10),
+                    return Container(
+                      margin: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(20)),
+                        color: Theme.of(context).colorScheme.surfaceContainer,
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SfCircularChart(
+                            palette: <Color>[
+                              Theme.of(context).colorScheme.inversePrimary,
+                              Theme.of(context).colorScheme.inverseSurface,
+                              Theme.of(context).colorScheme.onInverseSurface,
+                              Theme.of(context).colorScheme.onPrimary,
+                              Theme.of(context).colorScheme.onSecondary,
+                              Theme.of(context).colorScheme.onSurface,
+                              Theme.of(context).colorScheme.onTertiary,
+                              Theme.of(context).colorScheme.primary,
+                              Theme.of(context).colorScheme.secondary,
+                              Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryFixedVariant,
+                              Theme.of(context).colorScheme.tertiary,
+                            ],
+                            series: <CircularSeries<ChartData, String>>[
+                              DoughnutSeries<ChartData, String>(
+                                dataSource: circleChartData,
+                                xValueMapper: (ChartData data, _) => data.x,
+                                yValueMapper: (ChartData data, _) => data.y,
+                                dataLabelMapper: (ChartData data, _) => data.x,
+                                sortingOrder: SortingOrder.ascending,
+                                explode: true,
+                                strokeWidth: 0.5,
+                                strokeColor:
+                                    Theme.of(context).colorScheme.surface,
+                                dataLabelSettings: const DataLabelSettings(
+                                  showZeroValue: false,
+                                  isVisible: true,
+                                  labelPosition: ChartDataLabelPosition.outside,
+                                  textStyle: TextStyle(fontSize: 10),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                          const Text(
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 18),
+                            'When you\ndrink water',
+                          ),
+                        ],
+                      ),
                     );
                   }
                 },

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:waterbottle/data/logs.dart';
-import 'package:waterbottle/data/db.dart';
 
 class LogsPage extends StatefulWidget {
   const LogsPage({Key? key}) : super(key: key);
@@ -19,42 +18,11 @@ class _LogsPageState extends State<LogsPage> {
   final TextEditingController _rawController = TextEditingController();
   bool _isRaw = false;
 
-  late Future<ProfileData> _profileDataFuture;
-  late Future<ConsumptionData?> _consumptionDataFuture;
-
-  final TextEditingController _weightController = TextEditingController();
-  final TextEditingController _manualAdjustmentController =
-      TextEditingController();
-  final TextEditingController _waterInBottleController =
-      TextEditingController();
-  final TextEditingController _bottleCapacityController =
-      TextEditingController();
-  final TextEditingController _consumeGoalController = TextEditingController();
-
   @override
   void initState() {
     super.initState();
     _logsFuture = _loadLogs();
     _logsFormattedFuture = Logs.loadLogs();
-    _profileDataFuture = ProfileData.readProfileData();
-    _consumptionDataFuture = ConsumptionData.loadConsumptionData();
-  }
-
-  Future<void> _saveProfileData() async {
-    final profileData = ProfileData(
-      weight: double.parse(_weightController.text),
-      manualAdjustment: int.parse(_manualAdjustmentController.text),
-    );
-    await profileData.writeProfileData();
-  }
-
-  Future<void> _saveConsumptionData() async {
-    final consumptionData = ConsumptionData(
-      waterInBottle: double.parse(_waterInBottleController.text),
-      bottleCapacity: double.parse(_bottleCapacityController.text),
-      consumeGoal: double.parse(_consumeGoalController.text),
-    );
-    await ConsumptionData.saveConsumptionData(consumptionData);
   }
 
   Future<String> _loadLogs() async {
@@ -206,97 +174,6 @@ class _LogsPageState extends State<LogsPage> {
                       ),
                     ),
                   );
-                }
-              },
-            ),
-            FutureBuilder<ProfileData>(
-              future: _profileDataFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (snapshot.hasData) {
-                  final profileData = snapshot.data!;
-                  _weightController.text = profileData.weight.toString();
-                  _manualAdjustmentController.text =
-                      profileData.manualAdjustment.toString();
-                  return Padding(
-                    padding: const EdgeInsets.all(50.0),
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _weightController,
-                          decoration:
-                              const InputDecoration(labelText: 'Weight'),
-                          keyboardType: TextInputType.number,
-                        ),
-                        TextField(
-                          controller: _manualAdjustmentController,
-                          decoration: const InputDecoration(
-                              labelText: 'Manual Adjustment'),
-                          keyboardType: TextInputType.number,
-                        ),
-                        ElevatedButton(
-                          onPressed: _saveProfileData,
-                          child: const Text('Save Profile Data'),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  return const Center(child: Text('No profile data available'));
-                }
-              },
-            ),
-            FutureBuilder<ConsumptionData?>(
-              future: _consumptionDataFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (snapshot.hasData) {
-                  final consumptionData = snapshot.data!;
-                  _waterInBottleController.text =
-                      consumptionData.waterInBottle.toString();
-                  _bottleCapacityController.text =
-                      consumptionData.bottleCapacity.toString();
-                  _consumeGoalController.text =
-                      consumptionData.consumeGoal.toString();
-                  return Padding(
-                    padding: const EdgeInsets.all(50.0),
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _waterInBottleController,
-                          decoration: const InputDecoration(
-                              labelText: 'Water in Bottle'),
-                          keyboardType: TextInputType.number,
-                        ),
-                        TextField(
-                          controller: _bottleCapacityController,
-                          decoration: const InputDecoration(
-                              labelText: 'Bottle Capacity'),
-                          keyboardType: TextInputType.number,
-                        ),
-                        TextField(
-                          controller: _consumeGoalController,
-                          decoration:
-                              const InputDecoration(labelText: 'Consume Goal'),
-                          keyboardType: TextInputType.number,
-                        ),
-                        ElevatedButton(
-                          onPressed: _saveConsumptionData,
-                          child: const Text('Save Consumption Data'),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  return Center(
-                      child: Text(
-                          'No consumption data available ${snapshot.connectionState} ${snapshot.data} ${DateTime.now()}'));
                 }
               },
             ),

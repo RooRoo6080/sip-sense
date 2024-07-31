@@ -33,13 +33,19 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
 
 Future<void> checkLogsAndTriggerFunction() async {
   final logs = await Logs.loadLogs();
-  profileData = await ProfileData.readProfileData();
+  profileData = await ProfileData.readProfileData() ??
+      ProfileData(
+        weight: 70.0,
+        manualAdjustment: 0,
+        drinkEvery: 1,
+      );
   if (logs != null && logs.entries.isNotEmpty) {
     final latestLog = logs.entries.last;
     final now = DateTime.now();
     if (now.difference(latestLog.dateTime).inHours >= profileData.drinkEvery) {
       triggerFunction(true);
-      logger.info('Sending reminder; drinkEvery: ${profileData.drinkEvery} hours');
+      logger.info(
+          'Sending reminder; drinkEvery: ${profileData.drinkEvery} hours');
     } else {
       triggerFunction(false);
       logger.info('remove notification');
@@ -52,7 +58,7 @@ Future<void> checkLogsAndTriggerFunction() async {
 
 void triggerFunction(bool option) {
   option
-      ? NotificationService().showNotification(
-          2, 'Drink water', 'It\'s been over ${profileData.drinkEvery} hours since you last drunk water')
+      ? NotificationService().showNotification(2, 'Drink water',
+          'It\'s been over ${profileData.drinkEvery} hours since you last drunk water')
       : NotificationService().removeNotification(2);
 }

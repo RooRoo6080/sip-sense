@@ -385,46 +385,50 @@ class _MyDayPageState extends State<MyDayPage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
-                          const Divider(
-                            thickness: 1,
+                          const SizedBox(height: 40),
+                          Container(
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(20)),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainer,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                DoTWCircularProgressIndicator(
+                                  text: 'S',
+                                  endTween: sundayConsumed! / consumeGoal,
+                                ),
+                                DoTWCircularProgressIndicator(
+                                  text: 'M',
+                                  endTween: mondayConsumed! / consumeGoal,
+                                ),
+                                DoTWCircularProgressIndicator(
+                                  text: 'T',
+                                  endTween: tuesdayConsumed! / consumeGoal,
+                                ),
+                                DoTWCircularProgressIndicator(
+                                  text: 'W',
+                                  endTween: wednesdayConsumed! / consumeGoal,
+                                ),
+                                DoTWCircularProgressIndicator(
+                                  text: 'T',
+                                  endTween: thursdayConsumed! / consumeGoal,
+                                ),
+                                DoTWCircularProgressIndicator(
+                                  text: 'F',
+                                  endTween: fridayConsumed! / consumeGoal,
+                                ),
+                                DoTWCircularProgressIndicator(
+                                  text: 'S',
+                                  endTween: saturdayConsumed! / consumeGoal,
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              DoTWCircularProgressIndicator(
-                                text: 'S',
-                                endTween: sundayConsumed! / consumeGoal,
-                              ),
-                              DoTWCircularProgressIndicator(
-                                text: 'M',
-                                endTween: mondayConsumed! / consumeGoal,
-                              ),
-                              DoTWCircularProgressIndicator(
-                                text: 'T',
-                                endTween: tuesdayConsumed! / consumeGoal,
-                              ),
-                              DoTWCircularProgressIndicator(
-                                text: 'W',
-                                endTween: wednesdayConsumed! / consumeGoal,
-                              ),
-                              DoTWCircularProgressIndicator(
-                                text: 'T',
-                                endTween: thursdayConsumed! / consumeGoal,
-                              ),
-                              DoTWCircularProgressIndicator(
-                                text: 'F',
-                                endTween: fridayConsumed! / consumeGoal,
-                              ),
-                              DoTWCircularProgressIndicator(
-                                text: 'S',
-                                endTween: saturdayConsumed! / consumeGoal,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          const Divider(thickness: 1),
                         ],
                       ),
                     );
@@ -444,27 +448,49 @@ class _MyDayPageState extends State<MyDayPage> {
                     return const Center(child: Text('No data available'));
                   } else if (snapshot.connectionState == ConnectionState.done) {
                     final chartdata = snapshot.data!;
-                    return SfCartesianChart(
-                      title: const ChartTitle(text: 'Water consumption today'),
-                      primaryXAxis: const CategoryAxis(),
-                      legend: const Legend(isVisible: true),
-                      series: <CartesianSeries>[
-                        SplineAreaSeries<ChartData, String>(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          opacity: 1,
-                          dataSource: chartdata,
-                          xValueMapper: (ChartData data, _) => data.x,
-                          yValueMapper: (ChartData data, _) => data.y2,
-                          name: "Target",
+                    return Stack(
+                      children: [
+                        SfCartesianChart(
+                          primaryXAxis: const CategoryAxis(),
+                          legend: const Legend(isVisible: true),
+                          series: <CartesianSeries>[
+                            SplineAreaSeries<ChartData, String>(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              opacity: 1,
+                              dataSource: chartdata,
+                              xValueMapper: (ChartData data, _) => data.x,
+                              yValueMapper: (ChartData data, _) => data.y2,
+                              name: "Target",
+                            ),
+                            SplineAreaSeries<ChartData, String>(
+                              color: Theme.of(context).colorScheme.primary,
+                              opacity: 0.7,
+                              dataSource: chartdata,
+                              xValueMapper: (ChartData data, _) => data.x,
+                              yValueMapper: (ChartData data, _) => data.y,
+                              name: "You",
+                            ),
+                          ],
                         ),
-                        SplineAreaSeries<ChartData, String>(
-                          color: Theme.of(context).colorScheme.primary,
-                          opacity: 0.7,
-                          dataSource: chartdata,
-                          xValueMapper: (ChartData data, _) => data.x,
-                          yValueMapper: (ChartData data, _) => data.y,
-                          name: "You",
-                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 52),
+                          child: Container(
+                            alignment: Alignment.center,
+                            margin: const EdgeInsets.only(left: 55, right: 55),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  const BorderRadius.all(Radius.circular(20)),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainer,
+                            ),
+                            child: const Text(
+                              style: TextStyle(fontSize: 18),
+                              'Water consumption today',
+                            ),
+                          ),
+                        )
                       ],
                     );
                   } else {

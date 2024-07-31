@@ -7,11 +7,19 @@ class ProfileData {
   double weight;
   int manualAdjustment;
   double drinkEvery;
+  // int sleepHour;
+  // int sleepMinute;
+  // int wakeupHour;
+  // int wakeupMinute;
 
   ProfileData({
     this.weight = 70.0,
     this.manualAdjustment = 0,
     this.drinkEvery = 1,
+    // this.sleepHour = 11,
+    // this.sleepMinute = 0,
+    // this.wakeupHour = 8,
+    // this.wakeupMinute = 0,
   });
 
   Map<String, dynamic> toJson() {
@@ -35,14 +43,28 @@ class ProfileData {
     return File('${directory.path}/profile_data.json');
   }
 
-  static Future<ProfileData> readProfileData() async {
-    final file = await _getLocalFile();
-    if (await file.exists()) {
-      String contents = await file.readAsString();
-      Map<String, dynamic> json = jsonDecode(contents);
-      return ProfileData.fromJson(json);
+  static Future<ProfileData?> readProfileData() async {
+    try {
+      final file = await _getLocalFile();
+      if (await file.exists()) {
+        final jsonData = jsonDecode(await file.readAsString());
+        return ProfileData.fromJson(jsonData);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/profile_data.json';
+      final file = File(filePath);
+      final defaultData = ProfileData(
+        weight: 70,
+        manualAdjustment: 0,
+        drinkEvery: 1,
+      );
+      await file.writeAsString(jsonEncode(defaultData.toJson()));
+      final jsonData = jsonDecode(await file.readAsString());
+      return ProfileData.fromJson(jsonData);
     }
-    return ProfileData();
   }
 
   Future<void> writeProfileData() async {
@@ -115,7 +137,7 @@ class ConsumptionData {
 
   static Future<void> updateConsumptionData(double consumed) async {
     final data = await loadConsumptionData();
-    
+
     data!.waterInBottle -= consumed;
     await saveConsumptionData(data);
   }
