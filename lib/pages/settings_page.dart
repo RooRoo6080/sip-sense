@@ -139,6 +139,35 @@ class _SettingsPageState extends State<SettingsPage> {
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 20),
+            const Text('Bottle capacity'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove),
+                  onPressed: () {
+                    setState(() {
+                      _consumptionData.bottleCapacity--;
+                      _updateConsumptionData();
+                    });
+                  },
+                ),
+                Text(
+                  '${_consumptionData.bottleCapacity} oz',
+                  style: const TextStyle(fontSize: 18),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () {
+                    setState(() {
+                      _consumptionData.bottleCapacity++;
+                      _updateConsumptionData();
+                    });
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             const Divider(),
             const SizedBox(height: 10),
             Consumer<ThemeNotifier>(

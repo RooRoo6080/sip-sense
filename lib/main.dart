@@ -120,7 +120,7 @@ class _HomePageState extends State<HomePage> {
             );
           },
         ),
-        title: const Text('Smartwater'),
+        title: const Text('Water Whiz'),
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle),

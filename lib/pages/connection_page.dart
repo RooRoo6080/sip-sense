@@ -69,7 +69,10 @@ class _ConnectionPageState extends State<ConnectionPage> {
             // ),
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Text(connectedDeviceDetails),
+              child: Text(
+                style: const TextStyle(fontSize: 20),
+                connectedDeviceDetails,
+              ),
             )
           ],
         ));

@@ -3,10 +3,12 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:waterbottle/services/ble_connection_handler.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:waterbottle/data/logs.dart';
+import 'package:waterbottle/data/db.dart';
 
 class CommunicationHandler {
   SimpleLogger logger = SimpleLogger();
   late final BleConnectionHandler bleConnectionHandler;
+  late ConsumptionData _consumptionData;
 
   // device information
   static final Uuid characteristicId =
@@ -14,11 +16,26 @@ class CommunicationHandler {
   static final Uuid serviceId =
       Uuid.parse("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 
-  String oldMessage = "-1";
+  String oldMessage = "-0";
 
   String deviceId = "";
   bool isConnected = false;
   late Function(String) onMessageReceived;
+
+  Future<void> _loadConsumptionData() async {
+    final data = await ConsumptionData.loadConsumptionData();
+    _consumptionData = data ??
+        ConsumptionData(
+          waterInBottle: 0,
+          bottleCapacity: 24,
+          consumeGoal: 35,
+        );
+  }
+
+  Future<void> _updateConsumptionData() async {
+    await ConsumptionData.saveConsumptionData(_consumptionData);
+    _loadConsumptionData();
+  }
 
   Future<void> _addLogEntry(double consumed) async {
     final logs = await Logs.loadLogs() ?? Logs(entries: []);
@@ -89,15 +106,20 @@ class CommunicationHandler {
 
   void receivedCharacteristicValue(
       {required QualifiedCharacteristic characteristic,
-      required List<int> values}) {
+      required List<int> values}) async {
     if (characteristic.characteristicId == characteristicId) {
       String value = utf8.decode(values);
       if (oldMessage != value) {
+        if (double.parse(value) == -1) {
+          await _loadConsumptionData();
+          _consumptionData.waterInBottle = _consumptionData.bottleCapacity;
+          await _updateConsumptionData();
+        }
         logger.info('Message: $value');
         _addLogEntry(double.parse(value) / 10.0);
         oldMessage = value;
       }
-      // onMessageReceived(value);
+      // onMessageReceived(value); // notify every time data is received
       readDeviceInformation(serviceId, characteristicId);
     }
   }

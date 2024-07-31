@@ -283,18 +283,18 @@ class _MyDayPageState extends State<MyDayPage> {
                                     ),
                                     Column(
                                       children: [
-                                        SizedBox(
+                                        const SizedBox(
                                           width: 40,
                                           height: 40,
-                                          child: TextButton(
-                                            onPressed: () {
-                                              setState(() {});
-                                            },
-                                            child: const Icon(
-                                              Icons.wb_incandescent,
-                                              size: 25,
-                                            ),
-                                          ),
+                                          // child: TextButton(
+                                          //   onPressed: () {
+                                          //     setState(() {});
+                                          //   },
+                                          //   child: const Icon(
+                                          //     Icons.wb_incandescent,
+                                          //     size: 25,
+                                          //   ),
+                                          // ),
                                         ),
                                         const SizedBox(height: 180),
                                         SizedBox(
